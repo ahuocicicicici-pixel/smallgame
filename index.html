@@ -593,6 +593,126 @@
     align-items: center;
     text-align: center;
     padding: 48px;
+    position: relative;
+  }
+  /* v3.3 · 角色选择背景图 · 图缺失时 fallback 黑底 */
+  .start-screen-bg {
+    background-color: #0e0e12;
+    background-image: url('assets/login-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  .start-screen-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(14,14,18,0.4) 0%, rgba(14,14,18,0.65) 50%, rgba(14,14,18,0.85) 100%);
+    pointer-events: none;
+  }
+  .start-overlay {
+    position: relative;
+    z-index: 1;
+    max-width: 880px;
+    width: 100%;
+  }
+  /* 角色选择 */
+  .role-pick-head {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: #c6b78f;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 20px;
+    margin-bottom: 24px;
+  }
+  .role-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .role-card {
+    border: 1px solid rgba(125, 116, 96, 0.4);
+    background: rgba(14, 14, 18, 0.55);
+    padding: 22px 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(4px);
+    text-align: center;
+  }
+  .role-card.available:hover {
+    border-color: #e8b87c;
+    background: rgba(232, 184, 124, 0.08);
+    transform: translateY(-3px);
+  }
+  .role-card.available.selected {
+    border-color: #e8b87c;
+    background: rgba(232, 184, 124, 0.18);
+    box-shadow: 0 0 0 1px #e8b87c, 0 4px 16px rgba(232, 184, 124, 0.2);
+  }
+  .role-card.locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .role-card.locked:hover {
+    border-color: rgba(125, 116, 96, 0.6);
+    background: rgba(125, 116, 96, 0.1);
+  }
+  .role-card.hidden-task {
+    border-style: dashed;
+    border-color: rgba(125, 116, 96, 0.3);
+    opacity: 0.6;
+  }
+  .role-card.hidden-task .role-icon { color: #5a5448; }
+  .role-card.hidden-task:hover {
+    opacity: 0.9;
+    border-color: rgba(200, 74, 62, 0.4);
+  }
+  .role-card.hidden-task.revealed {
+    opacity: 1;
+    border-color: rgba(200, 74, 62, 0.6);
+    background: rgba(200, 74, 62, 0.08);
+  }
+  .role-card.hidden-task.revealed .role-icon { color: #c84a3e; }
+  .role-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+    color: #c6b78f;
+  }
+  .role-name {
+    font-size: 18px;
+    color: #f3ead2;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .role-desc {
+    font-size: 12px;
+    color: #a39978;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    min-height: 36px;
+  }
+  .role-status {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: #7d7460;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(125, 116, 96, 0.3);
+  }
+  .role-card.available .role-status { color: #e8b87c; }
+  .role-card.locked .role-status { color: #5a5448; }
+  .start-input-wrapper.hidden { display: none; }
+  @media (max-width: 720px) {
+    .role-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .role-card { padding: 16px 10px; }
+    .role-icon { font-size: 26px; }
+    .role-name { font-size: 16px; letter-spacing: 1px; }
+    .role-desc { font-size: 11px; min-height: 48px; }
   }
   .start-mirror {
     font-family: "JetBrains Mono", monospace;
@@ -972,46 +1092,32 @@ const STORY = {
     N02A: {
       chapter: "第一章 · 又一个周一",
       title: "入职心理评估 · Part 3/3",
-      summary: "10:05 · HR 强制问卷弹窗 · 3 题不能关 · 时间跳到 13:50",
-      task: "HR 心理评估问卷 · 3 题 · 不提交无法关闭弹窗",
+      summary: "10:05 · HR 强制问卷弹窗 · 不提交无法关闭 · 时间跳到 13:50",
+      task: "HR 心理评估问卷 · 不提交无法关闭弹窗",
       weight: 0.5,
       body: `你点"稍后处理"正要关掉,弹窗跳出来:
 
 > **您有 1 份未完成的评估 · 提交前无法关闭此窗口**
 
 *行吧。*
-*做这行三年,你知道这种窗口就是专门治你这种拖延癌的。*
 
 ——
 
-> **Growmax 入职心理评估 · Part 3/3**
-> *(前 2 部分已于入职日提交)*
->
-> **题 1** · 当 DDL 在即,brief 突然反复修改,你更倾向:
-> ○ 按新版本从头重梳一遍
-> ○ 拿老版硬改局部,保完成度
-> ○ 停下,先找人确认哪一版是最终版
-> ○ 同时推两个版本,等客户拍
->
-> **题 2** · 跨时区合作,对方 48 小时不回复,你:
-> ○ 继续每天 follow up
-> ○ 换渠道(电话 / 经纪人)
-> ○ 升级给 AM 让他 push
-> ○ 搁置,等对方回
->
-> **题 3** · 大客户的小事 × 小客户的大事同时撞上,先:
+> **Growmax 入职心理评估 · Part 3/3** · 共 3 题
+
+*你飞速点完前两题(brief 反复 · 跨时区 follow up · 都是套话题)· 选项扫一眼就过。*
+*第三题你停了一下:*
+
+> **题 3** · 大客户的小事 × 小客户的大事同时撞上 · 你先:
 > ○ 大客户的小事(关系重要)
 > ○ 小客户的大事(事情重要)
 > ○ 通知双方,问能否延后
 > ○ 拉 AM 一起拍
 
-*Part 1 和 Part 2 你根本没印象自己填过。*
-*你入职那天光签合同就签到手软,谁知道 HR 塞了什么进去。*
-
 *屏幕右下角,微信还在闪 —— 阿布那条"辛苦再找点新的人嘛"没下去。*`,
       choices: [
-        { key: "A", text: "*“认真填,反正才 3 题。”* 你每题都停了 20 秒,选了最像自己的", effects: { 决: 1, 共: 1 }, next: "N03", flag: "profile_thoughtful" },
-        { key: "B", text: "*“第二个第二个第二个,交了。”* 一排点下来,30 秒关窗口", effects: { 险: 1, 决: 1 }, next: "N03", flag: "profile_careless" },
+        { key: "A", text: "*“认真填,反正才 1 题。”* 你停了 20 秒,选了最像自己的", effects: { 决: 1, 共: 1 }, next: "N03", flag: "profile_thoughtful" },
+        { key: "B", text: "*“第二个第二个,交了。”* 5 秒关窗口", effects: { 险: 1, 决: 1 }, next: "N03", flag: "profile_careless" },
         { key: "C", text: "*“挑看起来最不扎眼的那个。”* 不冒尖 · 不冒头 · 避险模式", effects: { 规: 1, 共: -1 }, next: "N03", flag: "profile_defensive" },
         { key: "D", text: "*你打开手机相册那张 ^_^ 截图对着看了一眼,然后填得特别小心 —— 像有人在背后。*", effects: { 决: 1, 险: 1 }, next: "N03", flag: "profile_aware", condition: s => s.items.has("hr_email_screenshot") }
       ]
@@ -1304,7 +1410,7 @@ const STORY = {
         bought_time_for_am: `*阿布 11:35 群里挨个回了 4 条 · 你刚好下班吃饭。*\n*回来你发现 Sam 12:10 群里一句:"@{playerName} 你今天不在?"*`,
         saw_mirror_auth: `*你 14:30 又看了一眼那个 OA 弹窗 —— 右下角小字 \`Mirror Auth v14 · For Cohort Personnel Only\` 还在。*\n*"Cohort"。这个词你第一次见是在公司年会的 PPT 里 —— "S 级 Cohort 培养计划" —— 当时你以为是营销话术。*\n*现在你不太确定。*`
       },
-      body: `**16:20**。\n\nNW1 4 条 Sam 评论 · 你按选择处理完。\n你刚 push 完 NoTechBro 的吐槽报价(Nolan 转 Sam 接受 · 加价 1W 通过)。\n\nOA SSO 报错 —— 你飞书登不进去。\n你抬头。\n角落 {{unlock_nw2|Gordon|hr_email_screenshot}} 的兜帽**动了一下**。\n\n你叹了口气 · 微信 Gordon。\n你:"哥能帮我搞下 OA 吗 飞书都登不上"\nGordon 28 分钟没回。\n\n—— 28 分钟后。\nGordon 微信回:"你那 OA 是哪年部署的"\n\n*这不是回答 · 是反问。*\n*Gordon 不修 OA · Gordon 在评估 OA。*\n\n——\n\n**16:48**。\n\nOA 还没好。你打开邮箱准备改用 webmail。\n\n—— 你看到一封今早 09:11 收到的邮件 · 你之前没注意:\n\n> From: hr-system@growmax.io\n> Subject: [Awareness] You have been added as a recipient\n> Body: (空)\n> **抄送列表(BCC 你):seraphine@growmax.io · pm14-ops@(隐去)**\n\n*"BCC 你"。*\n*你不该看到这封。*\n*HR 系统自动抄送 bug · 还是有人故意把你加进去?*\n\n——\n\n**16:51** · Emma WhatsApp 弹出来:\n\n> Emma: hi {playerName}\n> Emma: 我跟我经纪人 review 了一下合同 · 6 个月不够 · 客户那边要的是"全网+海外+短视频+长视频"\n> Emma: 我们最少得 12 个月 · 12 个月 + 全权 · 报价 18W 包打包\n> Emma: 不议价\n\n**16:53** · Vivian 微信你(她从来不主动发):\n\n> Vivian: 哎 Emma 这种你别正面回 · 转给阿布 · 让阿布去跟她经纪人对 · 你别担在自己手里\n> Vivian: 你做久了就知道 —— **达人是巨婴 · 客户也是巨婴 · 你做久了 · 都是在哄婴儿。**`,
+      body: `**16:20**。\n\nNW1 4 条 Sam 评论 · 你按选择处理完。\n你刚 push 完 NoTechBro 的吐槽报价(Nolan 转 Sam 接受 · 加价 1W 通过)。\n\nOA SSO 报错 —— 你飞书登不进去。\n你抬头。\n角落 {{unlock_nw2|Gordon|hr_email_screenshot}} 的兜帽**动了一下**。\n\n你叹了口气 · 微信 Gordon。\n你:"哥能帮我搞下 OA 吗 飞书都登不上"\n\n—— 28 分钟后。\nGordon 微信回:"你那 OA 是哪年部署的"\n\n*这不是回答 · 是反问。*\n*Gordon 不修 OA · Gordon 在评估 OA。*\n\n——\n\n**16:48**。\n\nOA 还没好。你打开邮箱准备改用 webmail。\n\n—— 你看到一封今早 09:11 收到的邮件 · 你之前没注意:\n\n> From: hr-system@growmax.io\n> Subject: [Awareness] You have been added as a recipient\n> Body: (空)\n> **抄送列表(BCC 你):seraphine@growmax.io · pm14-ops@(隐去)**\n\n*"BCC 你"。*\n*你不该看到这封。*\n*HR 系统自动抄送 bug · 还是有人故意把你加进去?*\n\n——\n\n**16:51** · Emma WhatsApp 弹出来:\n\n> Emma: hi {playerName}\n> Emma: 我跟我经纪人 review 了一下合同 · 6 个月不够 · 客户那边要的是"全网+海外+短视频+长视频"\n> Emma: 我们最少得 12 个月 · 12 个月 + 全权 · 报价 18W 包打包\n> Emma: 不议价\n\n**16:53** · Vivian 微信你(她从来不主动发):\n\n> Vivian: 哎 Emma 这种你别正面回 · 转给阿布 · 让阿布去跟她经纪人对 · 你别担在自己手里\n> Vivian: 你做久了就知道 —— **达人是巨婴 · 客户也是巨婴 · 你做久了 · 都是在哄婴儿。**`,
       choices: [
         { key: "A", text: "*\"正面 WhatsApp 回 Emma:'12 个月 18W 我先 review 一下 · 我们晚点回'。\"* 自己抗", effects: { 决: -1, 共: 1, 规: -1, 险: 2 }, next: "N04", flag: "emma_self_handle" },
         { key: "B", text: "*\"Emma 这条转给阿布 · 让阿布跟她经纪人对(听 Vivian 的)。\"*", effects: { 决: 1, 共: 2, 规: 2, 险: -1 }, next: "N04", flag: "emma_escalated_to_am" },
@@ -1346,7 +1452,7 @@ const STORY = {
         vivian_11am_briefing: `*Vivian 茶水间 12 分钟。她跟你说了 Emma · 说了 Mila · 说了"哄婴儿"具体怎么哄。*\n*她最后一句是:"你别问太多 · 但你也别假装看不见。"*`,
         mila_termination_metadata: `*你 11:08 又点开飞书那行字段属性。*\n*\`seraphine@growmax.io · 周三 23:47\` —— 这个时间你今早第一次看的时候没多想。*\n*现在你想了 —— **23:47 是已离职状态被写进系统的时间**。*\n*Mila 周三晚上 11 点多还不知道自己第二天进不来。*`
       },
-      body: `**17:13**。\n\n你刚跟 Nolan 在群里 align 完 RourkeHolly 36W mou。\n钉钉弹窗:Nolan 发起语音通话 · 标题:"Quick"\n\n你接。背景音是 Sam 的话尾巴 —— 他和 Nolan 在车里。\n\n—— Sam 通过 Nolan 转达:\n\n> Nolan(转 Sam): KaptainK 早上那事我们 sync 完了\n> Nolan(转 Sam): 我们决定不要她了 · 她那个 IG story Reddit 上有人讨论 · 标 #ad 没付钱 · FTC 那边可能 notice\n> Nolan(转 Sam): KaptainK 18W 预算 · NoTechBro 升档 7W → 11W · 剩下 RourkeHolly 加价 25W → 36W 锁死\n\n—— 17:18 · 你低头看了一眼时间。\n—— **2 小时 42 分钟到 EOD。**\n—— 你今天还没跟 Konstantin 说要退单。\n—— 你还没跟 NoTechBro 说要升档。\n—— 你还没跟 RourkeHolly 团队说加 11W。\n\n*你刚把咖啡杯放下。*\n\n——\n\n17:30-19:00 · 你按选择路径处理三件事。\n\n**19:08**。\n你站起身收包。\n\n—— 19:09 · KaptainK 经纪团队(Konstantin)邮件抄群所有人 · official letter:\n\n> "We respectfully disagree with the unilateral termination.\n> The post in question was made under explicit verbal agreement with Aurora's product lead during a Tuesday 11:00 PT call.\n> We have the recording on file.\n> Any further unilateral action may result in counterclaim for tortious interference.\n> Written response expected by Friday 12:00 PT."\n> — Konstantin\n\n*Konstantin 抄了 Nolan + 阿布 + Vivian + 你 + Sam(by Nolan forwarding)。*\n*他声称 Sam 周二 11:00 PT 跟 KaptainK **有过口头授权**。*\n*—— 那天 Sam 有没有跟 KaptainK 通过电话?**只有 Sam 自己知道。***\n\n—— **19:11** · Sam 第一次直接 wechat 你(平时只跟 Nolan):\n\n> Sam: {playerName} 你过来一下 我现在还在公司\n> Sam: 这事变大了\n\n*你包还没背稳。*\n*你刚以为今天可以 7 点走。*`,
+      body: `**17:13**。\n\n你刚跟 Nolan 在群里 align 完 RourkeHolly 36W mou。\n钉钉弹窗:Nolan 发起语音通话 · 标题:"Quick"\n\n你接。背景音是 Sam 的话尾巴 —— 他和 Nolan 在车里。\n\n—— Sam 通过 Nolan 转达:\n\n> Nolan(转 Sam): KaptainK 早上那事我们 sync 完了\n> Nolan(转 Sam): 我们决定不要她了 · 她那个 IG story Reddit 上有人讨论 · 标 #ad 没付钱 · FTC 那边可能 notice\n> Nolan(转 Sam): KaptainK 18W 预算 · NoTechBro 升档 7W → 11W · 剩下 RourkeHolly 加价 25W → 36W 锁死\n\n—— 17:18 · 你低头看了一眼时间。\n—— **2 小时 42 分钟到 EOD。**\n—— 你今天还没跟 Konstantin 说要退单。\n—— 你还没跟 NoTechBro 说要升档。\n—— 你还没跟 RourkeHolly 团队说加 11W。\n\n*你刚把咖啡杯放下。*\n\n——\n\n17:30-19:00 · 你按选择路径处理三件事。\n\n**19:08**。\n你站起身收包。\n\n—— 19:09 · KaptainK 经纪团队(Konstantin)邮件抄群所有人 · official letter · 5 段英文 · 你 30 秒扫完:\n\n> "We respectfully disagree with the unilateral termination."\n> "Written response expected by Friday 12:00 PT."\n> — Konstantin\n\n*大意:Sam 周二 11:00 PT 跟 KaptainK **有过口头授权** · 录音在档 · 威胁 tortious interference · 周五中午前给正式答复。*\n*抄送:Nolan + 阿布 + Vivian + 你 + Sam(by Nolan forwarding)。*\n*—— 那天 Sam 有没有跟 KaptainK 通过电话?**只有 Sam 自己知道。***\n\n—— **19:11** · Sam 第一次直接 wechat 你(平时只跟 Nolan):\n\n> Sam: {playerName} 你过来一下 我现在还在公司\n> Sam: 这事变大了\n\n*你包还没背稳。*\n*你刚以为今天可以 7 点走。*`,
       choices: [
         { key: "A", text: "*\"去 Sam 办公室 · 把 timeline 当面摆给他 · 让他自己回 Konstantin。\"*", effects: { 决: 3, 共: 1, 规: 1, 险: 1 }, next: "N_THU_NIGHT", flag: "client_face_to_face" },
         { key: "B", text: "*\"回 Sam:'1 小时到您那边 · 建议您先群里 official 回 Konstantin 一句「团队 review · 周五 12 PT 前正式答复」· 给我们 14 小时 buffer'。\"*", effects: { 决: 2, 共: 0, 规: 3, 险: -1 }, next: "N_THU_NIGHT", flag: "bought_14_hours" },
@@ -1369,7 +1475,7 @@ const STORY = {
         director_backed_kill: `*你发完 Vivian 帮你拟的回 Konstantin 邮件 · 19:30 工位坐着。*\n*Vivian 没回你邮件 · 但你知道她明早 7:30 会做点什么。*\n*你 21:00 才出公司 —— 中间在工位上发了 30 分钟呆 · 21:18 上车。*`,
         contract_clause_quoted: `*你 19:45 调出 Aurora 合同 PDF · 翻到第 11 页 · §4.2:*\n\n> **§4.2 Sole Sourcing & Communication Protocol**\n> All commercial negotiations, including but not limited to talent fee discussions, contract amendments, and timeline adjustments, **must be channeled exclusively through the designated Agency Account Lead** (in this engagement, Growmax / Bryson Liu). Direct contact with Aurora's product, engineering, or executive personnel by talent representatives, agents, or third parties **constitutes a material breach** of this clause.\n\n*你截图 + 时间戳 · 19:50 发阿布 · 阿布 20:08 转 Vivian。*\n*Vivian 21:30 微信你:"§4.2 引用对的 · 写得也对。但合规走流程 · 周一才能正式发函 · 这周末你别再操心了。"*\n*你"嗯"了一下。*\n*但 21:55 你刷 Reddit r/influencermarketing —— 看到有人贴出一段截图:Konstantin 在某个 talent agency Slack 行业群组里 vent 了一段 · @ 了 5 个同行 · 其中有 KaptainK 的前 manager。*\n*周一 DLW 行业 newsletter 8:00 PT 推送 · 这单大概率会 cover。*\n\n*你 22:00 出公司。22:18 上车。*\n*合同条款是真的 —— 但流程比律师函慢 · 而 Konstantin 通过行业舆论先 weaponize 你。*`
       },
-      body: `出租车上。\n\n今天的天气你完全没注意到。\n窗外路过 · 都是吃完晚饭出来溜达的人。\n一对情侣走过广场 —— 男的吃糖葫芦 · 女的吃烤红薯。\n\n*你今天没吃晚饭。*\n*Konstantin 那封 official letter · 你打开了 4 次 · 没有一次读完。*\n\n——\n\n你想到米拉。\n**她离开两天了。**\n你都没仔细想过她现在在干嘛。\n她朋友圈这两天没发任何东西 —— 不是没发 · 是看不到。\n\n——\n\n到家。\n冰箱里只有矿泉水。你喝了两瓶。\n*"明天 EOD 把三件事都干完 · 然后周末睡两天。"*\n*"……我可能睡不着。"*\n\n——\n\n你躺床上。\n你定了周五早 7:30 闹钟。\n你打开手机 · 翻了一下相册的 awareness 文件夹。\n然后锁屏。\n\n*"你过来一下 · 这事变大了。"*\n*Sam 那条微信你已经看过 7 遍。*\n\n*你没睡着。*`,
+      body: `出租车上。\n\n今天的天气你完全没注意到。\n窗外路过 · 都是吃完晚饭出来溜达的人。\n一对情侣走过广场 —— 男的吃糖葫芦 · 女的吃烤红薯。\n\n*你今天没吃晚饭。*\n*Konstantin 那封 official letter · 你打开了 4 次 · 没有一次读完。*\n\n——\n\n你想到米拉。\n**她离开两天了。**\n你打开微信通讯录 · 翻到她的名字。\n头像没换。\n你点开她的朋友圈 —— 是一条"朋友仅展示最近三天"的灰线 · 滑下来空白。\n你点了"发起对话" · 输入框敲了一半 ——\n*"最近还好吗"*\n—— 你删了。退出。\n*她还在你联系人里。*\n*但你不知道往哪里发。*\n\n——\n\n到家。\n冰箱里只有矿泉水。你喝了两瓶。\n*"明天 EOD 把三件事都干完 · 然后周末睡两天。"*\n*"……我可能睡不着。"*\n\n——\n\n你躺床上。\n你定了周五早 7:30 闹钟。\n你打开手机 · 翻了一下相册的 awareness 文件夹。\n然后锁屏。\n\n*"你过来一下 · 这事变大了。"*\n*Sam 那条微信你已经看过 7 遍。*\n\n*你没睡着。*`,
       choices: [
         { key: "A", text: "关灯 · 盯天花板。", effects: { 险: 1 }, next: "N07" },
         { key: "B", text: "开台灯 · 不睡 · 等天蒙蒙亮。", effects: { 险: 1 }, next: "N07", flag: "all_nighter" }
@@ -2054,29 +2160,81 @@ function hideBriefcase() {
 function renderStartScreen() {
   hideBriefcase();
   $game.innerHTML = `
-    <div id="start-screen">
-      <div class="start-mirror">powered by Project Mirror</div>
-      <div class="start-title">运营修罗场</div>
-      <div class="start-subtitle-en">KOL SURVIVOR</div>
-      <div class="start-tagline">一个关于选择、咖啡和 KOL 的短剧</div>
+    <div id="start-screen" class="start-screen-bg">
+      <div class="start-overlay">
+        <div class="start-mirror">powered by Project Mirror</div>
+        <div class="start-title">运营修罗场</div>
+        <div class="start-subtitle-en">KOL SURVIVOR</div>
+        <div class="start-tagline">一个关于选择、咖啡和 KOL 的短剧</div>
 
-      <div class="start-briefing">
-        <div class="briefing-head">本周你的任务</div>
-        <div class="briefing-line">Client · <span class="briefing-em">Aurora AI</span></div>
-        <div class="briefing-line">Campaign · <span class="briefing-em">产品首发 · Global</span></div>
-        <div class="briefing-line">Deliverable · <span class="briefing-em">15 个达人 · 全部 live</span></div>
-        <div class="briefing-line">DDL · <span class="briefing-em">周五 EOD</span></div>
+        <div class="role-pick-head">选择你的视角</div>
+        <div class="role-grid">
+          <div class="role-card available" data-role="ops">
+            <div class="role-icon">💼</div>
+            <div class="role-name">运营</div>
+            <div class="role-desc">夹在 AM 和达人中间 · 一周凑齐 15 个海外达人</div>
+            <div class="role-status">已开放</div>
+          </div>
+          <div class="role-card locked" data-role="am">
+            <div class="role-icon">🤝</div>
+            <div class="role-name">AM</div>
+            <div class="role-desc">客户挤压你 · 你挤压运营 · 你也是夹心层</div>
+            <div class="role-status">即将开放</div>
+          </div>
+          <div class="role-card locked" data-role="boss">
+            <div class="role-icon">👔</div>
+            <div class="role-name">Boss</div>
+            <div class="role-desc">你看 PM-14 数据表 · 决定谁转正 · 谁出局</div>
+            <div class="role-status">即将开放</div>
+          </div>
+          <div class="role-card hidden-task" data-role="hidden">
+            <div class="role-icon">?</div>
+            <div class="role-name">???</div>
+            <div class="role-desc">等你发现</div>
+            <div class="role-status">隐藏任务</div>
+          </div>
+        </div>
+
+        <form class="start-input-wrapper hidden" id="start-form" autocomplete="off">
+          <input class="start-input" id="start-name-input" placeholder="输入你的名字" maxlength="10" />
+          <button class="start-btn" type="submit">开 始 游 戏</button>
+        </form>
       </div>
-
-      <form class="start-input-wrapper" id="start-form" autocomplete="off">
-        <input class="start-input" id="start-name-input" placeholder="输入你的名字" maxlength="10" />
-        <button class="start-btn" type="submit">开 始 游 戏</button>
-      </form>
     </div>
   `;
+
   const form = document.getElementById("start-form");
   const input = document.getElementById("start-name-input");
-  input.focus();
+
+  // 角色卡片点击逻辑
+  document.querySelectorAll(".role-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const role = card.dataset.role;
+      if (role === "ops") {
+        // 选中运营 · 显示输入框
+        document.querySelectorAll(".role-card").forEach(c => c.classList.remove("selected"));
+        card.classList.add("selected");
+        form.classList.remove("hidden");
+        input.focus();
+      } else if (role === "hidden") {
+        // 隐藏任务彩蛋:显示一行 metadata
+        card.classList.toggle("revealed");
+        const desc = card.querySelector(".role-desc");
+        if (card.classList.contains("revealed")) {
+          desc.textContent = "你也是 PM-14 Cohort 14 的一员 · 你的视角是数据表上那一行";
+        } else {
+          desc.textContent = "等你发现";
+        }
+      } else {
+        // 即将开放 · toast 提示
+        const status = card.querySelector(".role-status");
+        const old = status.textContent;
+        status.textContent = "敬请期待";
+        setTimeout(() => { status.textContent = old; }, 1500);
+      }
+    });
+  });
+
   form.addEventListener("submit", e => {
     e.preventDefault();
     const name = input.value.trim() || "阿华";
