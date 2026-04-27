@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>运营修罗场 · KOL Survivor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: #0e0e12;
+    color: #dcd6c8;
+    font-family: "Noto Serif SC", "Songti SC", "SimSun", serif;
+    font-size: 17px;
+    line-height: 1.85;
+    min-height: 100vh;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0) 0,
+      rgba(0,0,0,0) 2px,
+      rgba(255,255,255,0.015) 2px,
+      rgba(255,255,255,0.015) 3px
+    );
+    z-index: 999;
+  }
+  #game {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 32px 120px;
+    min-height: 100vh;
+  }
+  code { font-family: "JetBrains Mono", monospace; color: #b0d8b5; background: rgba(255,255,255,0.05); padding: 1px 6px; border-radius: 3px; font-size: 15px;}
+  strong { color: #fff4dc; font-weight: 700; }
+  em {
+    color: #8a7f5f;
+    font-style: italic;
+    opacity: 0.95;
+  }
+  /* 他人对话:中文双引号自动识别 */
+  .dialogue {
+    color: #ffe8a8;
+    font-weight: 500;
+  }
+  /* 剧情关键字 [[...]] */
+  .keyword {
+    color: #e8b87c;
+    font-weight: 700;
+    background: rgba(232, 184, 124, 0.08);
+    border-bottom: 1px dashed rgba(232, 184, 124, 0.7);
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+  /* 人名显示 · 内部同事 暖琥珀 · KOL/外部 青色 */
+  .npc-internal {
+    color: #f5dfa5;
+    font-weight: 600;
+    background: rgba(245, 223, 165, 0.06);
+    padding: 0 3px;
+    border-radius: 2px;
+  }
+  .npc-kol {
+    color: #8ed1c4;
+    font-weight: 600;
+    border-bottom: 1px dashed rgba(142, 209, 196, 0.55);
+    padding: 0 2px;
+  }
+  /* 嵌套:trigger 内的人名不应覆盖 trigger 的暗藏提示色 */
+  .hot-trigger .npc-internal,
+  .hot-trigger .npc-kol {
+    color: inherit;
+    background: transparent;
+    border-bottom: none;
+    font-weight: inherit;
+    padding: 0;
+  }
+  /* NPC 名字 cursor 提示可交互 */
+  .npc-internal[data-npc],
+  .npc-kol[data-npc] {
+    cursor: help;
+  }
+  /* NPC 人物卡 popup */
+  .npc-popup-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 998;
+    display: none;
+  }
+  .npc-popup-backdrop.show {
+    display: block;
+  }
+  .npc-popup-card {
+    position: fixed;
+    display: none;
+    pointer-events: none;
+    background: #1a1a1f;
+    border: 1px solid rgba(232, 184, 124, 0.45);
+    border-left: 3px solid #e8b87c;
+    padding: 12px 16px;
+    border-radius: 4px;
+    max-width: 280px;
+    z-index: 999;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    color: #e8e8e8;
+  }
+  .npc-popup-card.show {
+    display: block;
+  }
+  .npc-popup-card .npc-popup-tag {
+    font-size: 11px;
+    color: #e8b87c;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .npc-popup-card .npc-popup-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f5dfa5;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+  .npc-popup-card .npc-popup-role {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 10px;
+    font-style: italic;
+  }
+  .npc-popup-card .npc-popup-vibe {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #d8d8d8;
+  }
+  /* 移动 / 触屏:走 modal 居中风格 */
+  @media (pointer: coarse), (max-width: 640px) {
+    .npc-popup-card {
+      pointer-events: auto;
+    }
+    .npc-popup-card.show {
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%);
+      max-width: 85vw;
+      width: 85vw;
+    }
+  }
+
+  /* 隐藏触发词 {{flag|text}} · 和 keyword 视觉相近 · 但 hover 露出 Mirror 紫 */
+  .hot-trigger {
+    color: #d8c89a;
+    border-bottom: 1px dotted rgba(200, 180, 140, 0.4);
+    cursor: help;
+    padding: 1px 2px;
+    transition: color 0.25s, background 0.25s, border-color 0.25s;
+  }
+  .hot-trigger:hover {
+    color: #d8b8ff;
+    border-bottom-color: #d8b8ff;
+    background: rgba(216, 184, 255, 0.1);
+  }
+  .hot-trigger.fired {
+    color: #6a6350;
+    border-bottom: none;
+    cursor: default;
+    background: none;
+  }
+  /* 新解锁的隐藏选项闪现 */
+  @keyframes choice-unlock {
+    0%   { box-shadow: 0 0 0 0 rgba(216, 184, 255, 0.75); border-color: #d8b8ff; transform: translateY(-3px); }
+    50%  { box-shadow: 0 0 0 10px rgba(216, 184, 255, 0);  border-color: #d8b8ff; }
+    100% { box-shadow: 0 0 0 0 rgba(216, 184, 255, 0); transform: translateY(0); }
+  }
+  .choice.just-unlocked {
+    animation: choice-unlock 0.9s ease-out;
+  }
+  /* 引用块:邮件 / 数据表 / Mirror 记录 */
+  blockquote.quote-block {
+    margin: 20px 0;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.025);
+    border-left: 3px solid #5a5448;
+    color: #bfb59c;
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  blockquote.quote-block strong { color: #e8dfc8; font-style: normal; }
+  blockquote.quote-block code { font-style: normal; }
+
+  /* ========== 公文包(道具) ========== */
+  .briefcase {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    font-family: "JetBrains Mono", monospace;
+    user-select: none;
+  }
+  .briefcase-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(22, 22, 28, 0.92);
+    border: 1px solid #3a3528;
+    color: #c6a878;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .briefcase-btn:hover { border-color: #c6a878; }
+  .briefcase-btn .count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #c6a878;
+    color: #0e0e12;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+  }
+  .briefcase-btn.empty .count { display: none; }
+  .briefcase-btn.pulse {
+    animation: briefcase-pulse 1.2s ease-out;
+  }
+  @keyframes briefcase-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(232,184,124,0.6); }
+    60%  { box-shadow: 0 0 0 14px rgba(232,184,124,0); }
+    100% { box-shadow: 0 0 0 0 rgba(232,184,124,0); }
+  }
+  .briefcase-panel {
+    position: absolute;
+    top: 52px;
+    right: 0;
+    width: 280px;
+    max-width: calc(100vw - 32px);
+    background: #16161c;
+    border: 1px solid #3a3528;
+    border-radius: 4px;
+    padding: 14px 16px;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .briefcase.open .briefcase-panel { display: block; }
+  .briefcase-panel h4 {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #7d7460;
+    margin: 0 0 10px;
+    text-transform: uppercase;
+  }
+  .briefcase-panel .empty-hint {
+    color: #5a5448;
+    font-style: italic;
+    font-size: 12px;
+  }
+  .briefcase-panel ul { list-style: none; padding: 0; margin: 0; }
+  .briefcase-panel li {
+    color: #c6a878;
+    font-size: 12px;
+    padding: 6px 0;
+    border-bottom: 1px dashed #2a2820;
+    line-height: 1.5;
+  }
+  .briefcase-panel li:last-child { border-bottom: none; }
+  .briefcase-panel li .item-note {
+    display: block;
+    color: #7d7460;
+    font-size: 10px;
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .briefcase-toast {
+    position: absolute;
+    top: 52px;
+    right: 0;
+    background: rgba(232,184,124,0.12);
+    border: 1px solid #c6a878;
+    color: #ffe8a8;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 3px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .briefcase-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @media (max-width: 640px) {
+    .briefcase { top: 10px; right: 10px; }
+    .briefcase-btn { width: 38px; height: 38px; font-size: 16px; }
+    .briefcase-panel { width: 240px; }
+  }
+
+  /* ========== Meta 动态 OS(险 ≥ 8 触发) ========== */
+  .meta-whisper {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: rgba(180, 150, 200, 0.55);
+    letter-spacing: 1.5px;
+    margin: 22px 0 6px;
+    padding-left: 10px;
+    border-left: 2px solid rgba(180, 150, 200, 0.25);
+    opacity: 0;
+    animation: whisper-fade 2.4s ease-out forwards;
+    animation-delay: 0.8s;
+  }
+  @keyframes whisper-fade {
+    0%   { opacity: 0; }
+    30%  { opacity: 0.85; }
+    70%  { opacity: 0.85; }
+    100% { opacity: 0.25; }
+  }
+
+  /* ========== 顶部时间线 HUD ========== */
+  .timeline {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: linear-gradient(to bottom, #0e0e12 70%, rgba(14,14,18,0.6));
+    padding: 18px 0 14px;
+    margin: -48px -32px 28px;
+    padding-left: 32px;
+    padding-right: 32px;
+    border-bottom: 1px solid #22221c;
+    backdrop-filter: blur(4px);
+  }
+  .timeline-goal {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #7d7460;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    transition: color 0.3s, background 0.3s;
+    padding: 4px 8px;
+    border-radius: 3px;
+  }
+  .timeline-goal.updated {
+    color: #c84a3e;
+    background: rgba(200, 74, 62, 0.08);
+    animation: task-flash 1.6s ease-out;
+  }
+  @keyframes task-flash {
+    0%   { background: rgba(200, 74, 62, 0.0);  transform: scale(1); }
+    20%  { background: rgba(200, 74, 62, 0.25); transform: scale(1.02); }
+    100% { background: rgba(200, 74, 62, 0.08); transform: scale(1); }
+  }
+  .timeline-goal .task-label {
+    color: #c84a3e;
+    font-weight: bold;
+    margin-right: 8px;
+  }
+  .timeline-goal .task-text {
+    color: #4a3f2a;
+    text-transform: none;
+    letter-spacing: 0.5px;
+  }
+  /* v3.2 · prelude 浮窗 toast */
+  .prelude-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    z-index: 1000;
+    background: rgba(28, 24, 16, 0.96);
+    color: #f5ede0;
+    padding: 28px 32px 20px;
+    border-radius: 6px;
+    border: 1px solid rgba(200, 74, 62, 0.25);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+    max-width: 520px;
+    width: 88%;
+    max-height: 70vh;
+    overflow-y: auto;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .prelude-toast.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .prelude-toast-head {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #c84a3e;
+    text-align: center;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+  .prelude-toast-body {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #e8dec9;
+  }
+  .prelude-toast-body em { color: #b8a888; font-style: italic; }
+  .prelude-toast-body strong { color: #f5ede0; }
+  .prelude-toast-body blockquote {
+    border-left: 2px solid rgba(200, 74, 62, 0.4);
+    padding: 4px 12px;
+    margin: 8px 0;
+    color: #d4c8a8;
+    font-size: 13px;
+  }
+  .prelude-toast-hint {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(245, 237, 224, 0.15);
+    text-align: center;
+    font-size: 11px;
+    color: #7d7460;
+    letter-spacing: 1px;
+  }
+  /* prelude 折叠备份(body 顶部 details) */
+  .prelude-folded {
+    margin: 0 0 14px;
+    padding: 6px 10px;
+    background: rgba(125, 116, 96, 0.08);
+    border-left: 2px solid rgba(125, 116, 96, 0.4);
+    border-radius: 3px;
+    font-size: 13px;
+  }
+  .prelude-folded summary {
+    cursor: pointer;
+    color: #7d7460;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    list-style: none;
+    user-select: none;
+  }
+  .prelude-folded summary:hover { color: #4a3f2a; }
+  .prelude-folded[open] summary { margin-bottom: 8px; }
+  .prelude-folded-body {
+    color: #6a5f48;
+    line-height: 1.6;
+  }
+  .prelude-folded-body em { color: #8a7c5e; font-style: italic; }
+  @media (max-width: 700px) {
+    .prelude-toast { padding: 20px 18px 14px; font-size: 13px; }
+    .prelude-toast-body { font-size: 13px; }
+  }
+  .timeline-goal .goal-focus {
+    color: #c6a878;
+  }
+  .timeline-days {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+  }
+  .timeline-days .day {
+    color: #3a3528;
+    padding: 2px 8px;
+    border: 1px solid #2a2820;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+  .timeline-days .day.past {
+    color: #5a5448;
+    border-color: #3a3528;
+  }
+  .timeline-days .day.active {
+    color: #0e0e12;
+    background: #c6a878;
+    border-color: #c6a878;
+    font-weight: 700;
+  }
+  .timeline-days .sep {
+    color: #3a3528;
+    font-size: 10px;
+  }
+  @media (max-width: 640px) {
+    .timeline {
+      padding: 12px 0 10px;
+      margin: -28px -18px 18px;
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+    .timeline-goal { font-size: 10px; margin-bottom: 8px; letter-spacing: 1px; }
+    .timeline-days { font-size: 11px; gap: 4px; }
+    .timeline-days .day { padding: 2px 6px; }
+  }
+  .chapter-tag {
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: #7d7460;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .node-title {
+    font-size: 40px;
+    font-weight: 800;
+    color: #fff4dc;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+    padding: 14px 22px;
+    background: linear-gradient(90deg, rgba(232,184,124,0.18) 0%, rgba(232,184,124,0.04) 60%, transparent 100%);
+    border-left: 6px solid #e8b87c;
+    line-height: 1.15;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  }
+  .node-summary {
+    font-size: 14px;
+    color: #c0b48f;
+    font-style: italic;
+    margin: 0 0 30px 18px;
+    letter-spacing: 0.4px;
+    line-height: 1.55;
+    padding: 8px 14px;
+    background: rgba(232, 184, 124, 0.05);
+    border-left: 2px solid rgba(232, 184, 124, 0.4);
+  }
+  .node-body p {
+    margin-bottom: 18px;
+    color: #dcd6c8;
+  }
+  .choices {
+    margin-top: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .choice {
+    padding: 16px 20px;
+    border: 1px solid #33332d;
+    background: #16161c;
+    color: #d8d2c4;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 1.6;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .choice:hover {
+    border-color: #7d7460;
+    background: #1d1d24;
+    color: #f3ead2;
+    transform: translateX(4px);
+  }
+  .choice .choice-key {
+    color: #7d7460;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+    margin-right: 10px;
+  }
+  .choice:hover .choice-key { color: #c6b78f; }
+  .choice.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .choice.disabled::after {
+    content: " · M2 开放";
+    color: #555;
+    font-size: 12px;
+    margin-left: 6px;
+  }
+
+  /* === START SCREEN === */
+  #start-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 48px;
+  }
+  .start-mirror {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.1);
+    letter-spacing: 3px;
+    margin-bottom: 64px;
+    opacity: 0;
+    animation: mirror-flash 1.2s ease-out forwards;
+  }
+  @keyframes mirror-flash {
+    0%   { opacity: 0; }
+    25%  { opacity: 0.12; }
+    70%  { opacity: 0.12; }
+    100% { opacity: 0; }
+  }
+  .start-title {
+    font-size: 56px;
+    font-weight: 900;
+    color: #f3ead2;
+    letter-spacing: 8px;
+    margin-bottom: 12px;
+  }
+  .start-subtitle-en {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 18px;
+    color: #7d7460;
+    letter-spacing: 6px;
+    margin-bottom: 40px;
+  }
+  .start-tagline {
+    font-size: 15px;
+    color: #a39978;
+    margin-bottom: 40px;
+    font-style: italic;
+  }
+  .start-briefing {
+    border: 1px solid #2a2820;
+    padding: 22px 28px;
+    margin-bottom: 40px;
+    background: rgba(255,255,255,0.02);
+    text-align: left;
+    max-width: 360px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+  }
+  .briefing-head {
+    color: #7d7460;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #2a2820;
+  }
+  .briefing-line {
+    color: #8a8068;
+    margin: 5px 0;
+    letter-spacing: 0.5px;
+  }
+  .briefing-em {
+    color: #e8b87c;
+    font-weight: 700;
+  }
+  @media (max-width: 640px) {
+    .start-briefing { padding: 16px 20px; max-width: 280px; font-size: 12px; }
+    .briefing-head { font-size: 10px; margin-bottom: 10px; }
+  }
+  .start-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .start-input {
+    width: 280px;
+    padding: 12px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #4a4338;
+    color: #f3ead2;
+    font-family: inherit;
+    font-size: 18px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .start-input:focus { border-bottom-color: #c6b78f; }
+  .start-input::placeholder { color: #555; font-style: italic; }
+  .start-btn {
+    padding: 12px 48px;
+    background: transparent;
+    border: 1px solid #7d7460;
+    color: #dcd6c8;
+    font-family: inherit;
+    font-size: 16px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .start-btn:hover {
+    background: #c6b78f;
+    color: #0e0e12;
+    border-color: #c6b78f;
+  }
+  .demo-note {
+    position: fixed;
+    bottom: 12px;
+    right: 16px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #3a3528;
+    letter-spacing: 2px;
+  }
+
+  /* === ENDING SCREEN === */
+  .ending-screen { padding-top: 80px; }
+  .ending-label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: #7d7460;
+    letter-spacing: 4px;
+    margin-bottom: 24px;
+  }
+  .ending-name {
+    font-size: 40px;
+    font-weight: 900;
+    color: #f3ead2;
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+  }
+  .ending-body {
+    margin: 40px 0;
+    color: #dcd6c8;
+  }
+  .ending-body p { margin-bottom: 18px; }
+  .ending-divider {
+    border: none;
+    border-top: 1px solid #2a2820;
+    margin: 48px 0;
+  }
+  .personality-card {
+    background: #15151b;
+    border: 1px solid #2a2820;
+    padding: 32px;
+    margin: 32px 0;
+  }
+  .personality-letters {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 48px;
+    font-weight: 700;
+    color: #c6b78f;
+    letter-spacing: 8px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .personality-title {
+    font-size: 22px;
+    color: #f3ead2;
+    text-align: center;
+    margin-bottom: 24px;
+    letter-spacing: 2px;
+  }
+  .personality-row {
+    display: flex;
+    margin: 10px 0;
+    gap: 16px;
+    font-size: 15px;
+  }
+  .personality-row .label {
+    color: #7d7460;
+    min-width: 110px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+  .personality-row .value { color: #dcd6c8; flex: 1; }
+  .replay-hint {
+    text-align: center;
+    color: #5a5448;
+    font-size: 13px;
+    margin: 32px 0 16px;
+    font-style: italic;
+    letter-spacing: 1px;
+  }
+  .total-account {
+    font-style: italic;
+    color: #c6b78f;
+    background: rgba(198,183,143,0.05);
+    border-left: 2px solid #c6b78f;
+    padding: 20px 24px;
+    margin: 32px 0;
+    line-height: 2;
+  }
+  .clue-box {
+    background: rgba(232,184,124,0.04);
+    border: 1px solid #3a3528;
+    padding: 20px 24px;
+    margin: 32px 0;
+  }
+  .clue-box.empty { border-style: dashed; }
+  .clue-head {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: #c6a878;
+    margin-bottom: 12px;
+  }
+  .clue-empty {
+    color: #7d7460;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .clue-box ul { list-style: none; padding: 0; margin: 0; }
+  .clue-box li {
+    padding: 8px 0;
+    border-bottom: 1px dashed #2a2820;
+    font-size: 14px;
+    color: #e8dfc8;
+    line-height: 1.6;
+  }
+  .clue-box li:last-child { border-bottom: none; }
+  .clue-box li strong { color: #ffe8a8; font-weight: 600; }
+  .clue-box li .clue-note {
+    display: block;
+    color: #7d7460;
+    font-size: 12px;
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .restart-btn {
+    display: block;
+    margin: 64px auto 0;
+    padding: 14px 56px;
+    background: transparent;
+    border: 1px solid #7d7460;
+    color: #dcd6c8;
+    font-family: inherit;
+    font-size: 16px;
+    letter-spacing: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .restart-btn:hover {
+    background: #c6b78f;
+    color: #0e0e12;
+  }
+  .stats-debug {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: #4a4338;
+    text-align: center;
+    margin-top: 48px;
+    letter-spacing: 2px;
+  }
+
+  /* ========== 手机适配 ≤ 640px ========== */
+  @media (max-width: 640px) {
+    html, body { font-size: 16px; line-height: 1.8; }
+    #game { padding: 28px 18px 80px; }
+    .chapter-tag { font-size: 11px; letter-spacing: 3px; }
+    .node-title { font-size: 28px; margin-bottom: 12px; letter-spacing: 1px; padding: 10px 14px; border-left-width: 5px; }
+    .node-summary { font-size: 13px; margin: 0 0 22px 12px; padding: 6px 10px; }
+    .node-body p { margin-bottom: 14px; }
+    .choices { margin-top: 32px; gap: 10px; }
+    .choice { padding: 14px 16px; font-size: 15px; line-height: 1.55; }
+    .choice:hover { transform: none; }  /* 手机无 hover,取消动画 */
+    blockquote.quote-block { padding: 12px 14px; font-size: 14px; margin: 14px 0; }
+
+    /* 开始屏 */
+    #start-screen { padding: 28px 20px; min-height: 100vh; }
+    .start-title { font-size: 38px; letter-spacing: 5px; }
+    .start-subtitle-en { font-size: 14px; letter-spacing: 3px; }
+    .start-tagline { font-size: 13px; margin-bottom: 40px; }
+    .start-mirror { font-size: 10px; margin-bottom: 40px; }
+    .start-input { width: 240px; font-size: 16px; }
+    .start-btn { padding: 10px 32px; font-size: 15px; letter-spacing: 3px; }
+    .demo-note { right: 8px; bottom: 6px; font-size: 10px; letter-spacing: 1px; }
+
+    /* 结局页 */
+    .ending-screen { padding-top: 40px; }
+    .ending-label { font-size: 11px; letter-spacing: 3px; }
+    .ending-name { font-size: 30px; letter-spacing: 1px; }
+    .ending-body { margin: 28px 0; }
+    .personality-card { padding: 22px 18px; margin: 24px 0; }
+    .personality-letters { font-size: 36px; letter-spacing: 5px; }
+    .personality-title { font-size: 18px; margin-bottom: 18px; }
+    .personality-row { flex-direction: column; gap: 2px; font-size: 14px; margin: 8px 0; }
+    .personality-row .label { min-width: unset; font-size: 11px; }
+    .total-account { padding: 16px 18px; font-size: 14px; line-height: 1.75; }
+    .restart-btn { margin-top: 40px; padding: 12px 36px; font-size: 14px; letter-spacing: 3px; }
+  }
+
+  /* ========== 小屏幕 ≤ 380px(iPhone SE 级) ========== */
+  @media (max-width: 380px) {
+    #game { padding: 22px 14px 64px; }
+    .node-title { font-size: 20px; }
+    .choice { padding: 12px 14px; font-size: 14px; }
+    .start-title { font-size: 30px; letter-spacing: 3px; }
+  }
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div class="demo-note">DEMO · 4 结局 · 1 隐藏</div>
+
+<!-- NPC 人物卡 popup · hover (桌面) / tap (移动) 触发 -->
+<div id="npc-popup-backdrop" class="npc-popup-backdrop" aria-hidden="true"></div>
+<div id="npc-popup" class="npc-popup-card" role="tooltip" aria-hidden="true">
+  <div class="npc-popup-tag"></div>
+  <div class="npc-popup-name"></div>
+  <div class="npc-popup-role"></div>
+  <div class="npc-popup-vibe"></div>
+</div>
+
+<script>
+"use strict";
+
+// ============================================================
+// STORY DATA · 18 个节点(路径① 正常社畜)
+// ============================================================
+const STORY = {
+  nodes: {
+
+    // ---------- 第一章 · 又一个周一 ----------
+    N01: {
+      chapter: "第一章 · 又一个周一",
+      title: "又一个周一",
+      summary: "周一 09:59 · HR 邮件抽到你 + 阿布微信催改 Aurora 名单",
+      task: "周一 09:59 · 142 封未读 · 先活下来",
+      weight: 3,
+      body: `七点半闹钟响了,你按掉。
+八点响了,你又按掉。
+现在 09:59,电梯镜面里头发还有昨晚没烘干的褶子。
+
+*你习惯性按 21 楼,到门口才想起自己在 23 楼。*
+*三个月了,这电梯还没把你记住。*
+
+工位,灯还没亮你就把包甩上椅子。
+
+**邮箱 142 未读**。
+
+置顶一封 —— HR-System:
+
+> **【请完成新入职心理评估 · 仅需 2 分钟】**
+>
+> 亲爱的 {playerName},公司很重视每位同事的心理状态。这是一份轻松的小测试。
+>
+> —— HR Seraphine {{unlock_n01|^_^}}
+
+*谢谢 Seraphine,周一第一波 judge,准时到账。*
+*你做这行三年,还没遇过一个"仅需 2 分钟"的。*
+
+你正要把它拖进"稍后处理"文件夹,微信蹦了一下。
+
+——
+
+**阿布 · 微信 09:58**
+
+> Aurora 客户那边说我们昨天给的名单没有别家精准哎
+> 今天可以辛苦再找点新的人给他们提报上去嘛
+> 还有个事 · 客户说这周不给新版名单 他们要开始**比价**了
+> 你知道我意思吧
+
+*"比价" —— 三个字。*
+*别家。别家是谁。*
+*你鼠标一边挪 · 一边心里已经在 ezzzyKOL 的刷新键上热身。*`,
+      choices: [
+        { key: "A", text: "*哎行吧,客户最大。* 先回阿布一句“好滴收到,下午给你”", effects: { 决: 1, 共: 1, 规: 2 }, next: "N02A", flag: "compliant_a" },
+        { key: "B", text: "*什么客户啊,懂不懂我江东第一慧眼的含金量!* 先把那问卷填了再说,阿布不回先", effects: { 决: 2, 险: 2, 规: -1, 共: -1 }, next: "N02A", flag: "ghosted_bryson" },
+        { key: "C", text: "*怎么可能!* 让阿布把这话再往前递一层 —— 拉个会,客户来一起把 brief 过一遍,比我猜“别家”是谁靠谱", effects: { 决: 2, 规: 2, 共: 1 }, next: "N02A", flag: "pro_alignment" },
+        { key: "D", text: "*这 HR 签名怎么回事,一个大公司天天 ^_^ 是个什么风格.* 截一下这封邮件存着", effects: { 规: 1, 险: 1, 决: 1 }, next: "N02A", item: "hr_email_screenshot", condition: s => s.flags.has("unlock_n01") }
+      ]
+    },
+
+    N02A: {
+      chapter: "第一章 · 又一个周一",
+      title: "入职心理评估 · Part 3/3",
+      summary: "10:05 · HR 强制问卷弹窗 · 3 题不能关 · 时间跳到 13:50",
+      task: "HR 心理评估问卷 · 3 题 · 不提交无法关闭弹窗",
+      weight: 0.5,
+      body: `你点"稍后处理"正要关掉,弹窗跳出来:
+
+> **您有 1 份未完成的评估 · 提交前无法关闭此窗口**
+
+*行吧。*
+*做这行三年,你知道这种窗口就是专门治你这种拖延癌的。*
+
+——
+
+> **Growmax 入职心理评估 · Part 3/3**
+> *(前 2 部分已于入职日提交)*
+>
+> **题 1** · 当 DDL 在即,brief 突然反复修改,你更倾向:
+> ○ 按新版本从头重梳一遍
+> ○ 拿老版硬改局部,保完成度
+> ○ 停下,先找人确认哪一版是最终版
+> ○ 同时推两个版本,等客户拍
+>
+> **题 2** · 跨时区合作,对方 48 小时不回复,你:
+> ○ 继续每天 follow up
+> ○ 换渠道(电话 / 经纪人)
+> ○ 升级给 AM 让他 push
+> ○ 搁置,等对方回
+>
+> **题 3** · 大客户的小事 × 小客户的大事同时撞上,先:
+> ○ 大客户的小事(关系重要)
+> ○ 小客户的大事(事情重要)
+> ○ 通知双方,问能否延后
+> ○ 拉 AM 一起拍
+
+*Part 1 和 Part 2 你根本没印象自己填过。*
+*你入职那天光签合同就签到手软,谁知道 HR 塞了什么进去。*
+
+*屏幕右下角,微信还在闪 —— 阿布那条"辛苦再找点新的人嘛"没下去。*`,
+      choices: [
+        { key: "A", text: "*“认真填,反正才 3 题。”* 你每题都停了 20 秒,选了最像自己的", effects: { 决: 1, 共: 1 }, next: "N03", flag: "profile_thoughtful" },
+        { key: "B", text: "*“第二个第二个第二个,交了。”* 一排点下来,30 秒关窗口", effects: { 险: 1, 决: 1 }, next: "N03", flag: "profile_careless" },
+        { key: "C", text: "*“挑看起来最不扎眼的那个。”* 不冒尖 · 不冒头 · 避险模式", effects: { 规: 1, 共: -1 }, next: "N03", flag: "profile_defensive" },
+        { key: "D", text: "*你打开手机相册那张 ^_^ 截图对着看了一眼,然后填得特别小心 —— 像有人在背后。*", effects: { 决: 1, 险: 1 }, next: "N03", flag: "profile_aware", condition: s => s.items.has("hr_email_screenshot") }
+      ]
+    },
+
+    N03: {
+      chapter: "第二章 · Brief 风云",
+      title: "Aurora · 15 人名单",
+      summary: "周一 14:00 · 客户又改 brief · ezzzyKOL 筛 Aurora 15 人 · 缺 6 人",
+      task: "Aurora 名单 · 已筛 9 / 15 · 缺 6 人 · DDL 周五 EOD",
+      weight: 2,
+      preludesByFlag: {
+        compliant_a: `[系统弹窗] 您的评估已提交\n结果将纳入未来的岗位适配参考 · 感谢您的配合\n—— HR Seraphine ^_^\n\n*你"嗯"了一声,没什么波动。*\n\n——\n\n*再抬头,是 13:50。咖啡凉了第二次。手机闹钟响。*\n\n> **Aurora 项目群(7)** · 阿布 · 刚刚\n>\n> @{playerName} 客户产品那边说 brief 又改一下哎\n> 他们说隔壁家那个"**帝王蟹 Agent**"上周火了 日活破 500 万\n> 他们连夜赶了个"**大闸蟹 Agent**"哎 还分**公母版本**\n> 公蟹主攻生产力 母蟹主攻情感陪伴 客户说比帝王蟹厉害多了\n> 下午 4 点前给达人同步一下新版 辛苦辛苦\n\n*第三版了。*\n*上周"帝王蟹 Agent",这周"大闸蟹 Agent"还分公母。*\n*下周是不是该石斑鱼了。*`,
+        ghosted_bryson: `[系统弹窗] 您的评估已提交\n结果将纳入未来的岗位适配参考 · 感谢您的配合\n—— HR Seraphine ^_^\n\n*你"嗯"了一声,没什么波动。*\n\n——\n\n*再抬头,是 13:50。咖啡凉了第二次。手机闹钟响。*\n\n> **Aurora 项目群(7)** · 阿布 · 刚刚\n>\n> @{playerName} @Jasper 客户 brief 改了\n> 隔壁"**帝王蟹 Agent**"上周日活破 500 万 客户老板昨晚刷到没睡\n> 今早拍板加急 让我们对标做个"**大闸蟹 Agent**" 还分**公母版本**\n> 公蟹干活 母蟹陪聊 说是"差异化打到帝王蟹打不到的下沉场景"\n> 4 点前给达人同步一下 谢谢\n\n*Jasper 抬头:"这什么鬼。咱做 AI 还是做水产?"*\n*他没等回答 · 转回去刷自己的手机。*\n*你看不出他是觉得离谱 · 还是觉得反正不归他做。*`,
+        pro_alignment: `[系统弹窗] 您的评估已提交\n结果将纳入未来的岗位适配参考 · 感谢您的配合\n—— HR Seraphine ^_^\n\n*你"嗯"了一声,没什么波动。*\n\n——\n\n*再抬头,是 13:50。咖啡凉了第二次。手机闹钟响。*\n\n> **Aurora 项目群(7)** · 阿布 · 刚刚\n>\n> @{playerName} 刚跟客户开完会 同步下\n> 客户产品那边的诉求是这样 —— 他们说隔壁"**帝王蟹 Agent**"上周火了 日活破 500 万\n> 他们连夜赶了个"**大闸蟹 Agent**"哎 还分**公母版本**\n> 公蟹主攻生产力 母蟹主攻情感陪伴 客户说比帝王蟹厉害多了\n> 本来今天就要我们把这个卖点加进 brief 明天发达人\n>\n> 会上我把达人那边的修改成本摆出来 —— 公母两版要拍两条片 档期上真的赶不上\n> 客户思考了半天 同意"大闸蟹 Agent"下周再推\n> 这版先把帝王蟹卖点打实 发布档期挪后 3 天 没那么急了\n\n*你松了一口气 · 档期挪了 3 天。*\n*但 3 天后的 deadline 还是 deadline —— 只是从周五变成了下周一。*\n*而你名单上还是缺 6 个人。*`,
+        hr_email_screenshot: `[系统弹窗] 您的评估已提交\n结果将纳入未来的岗位适配参考 · 感谢您的配合\n—— HR Seraphine ^_^\n\n*你"嗯"了一声,没什么波动。*\n\n——\n\n*再抬头,是 13:50。咖啡凉了第二次。手机闹钟响。*\n\n> **Aurora 项目群(7)** · 阿布 · 刚刚\n>\n> @{playerName} 客户产品那边说 brief 又改了\n> 对标隔壁"**帝王蟹 Agent**"上周日活破 500 万\n> 他们连夜赶了个"**大闸蟹 Agent**" 还分**公母版本**\n> 下午 4 点前给达人同步一下新版 辛苦辛苦\n\n——\n\n*你切到相册 · 瞥了一眼那张 ^_^ 截图。*\n*Seraphine 的 ^_^ · 和阿布项目群的头像。*\n*今天上午挂在你两个不同的聊天窗口。*\n*不知道为什么你觉得这两件事 · 不应该连在一起想。*\n\n*大闸蟹。你在截 HR 邮件的间隙 · 才看到这条 brief。*`
+      },
+      body: `**14:00**。
+
+你打开 ezzzyKOL,新建项目 Aurora,开始跑筛选。
+
+\`Region = US West Coast\` ......... [[2,847 人]]
+\`Followers 500K-3M\` ............... [[1,124 人]]
+\`Category = Tech × Lifestyle × 非纯测评\` ... [[87 人]]
+\`Avg views ≥ 100K · 互动率 ≥ 3%\` ... [[41 人]]
+\`近 6 个月无 AI 硬件商单\` ......... [[24 人]]
+\`过滤客户说的"油腻"\` .............. [[12 人]]
+
+——
+
+*客户钦点 3 人*:
+
+· **RourkeHolly**(头部 · 3.2M · 客户钦点 #1)· "\`Email only. Do not chase.\`"
+· **KaptainK**(中腰 · 1.8M · 客户钦点 #2)· 经纪人 Konstantin 代理
+· **TechPeter**(中腰 · 950K · 客户钦点 #3)· 上个月刚和 [[海胆 Copilot]] 合作过 —— 客户说这是直接竞品,不能用
+
+*12 人里扣掉 TechPeter · 再扣掉 3 个最近发过"和 Aurora 太像"的内容(Nolan 要求) · 剩 9 人。*
+*要凑 15 人。*
+***缺 6 人。***
+
+*刚才算的"缺 3 人"是昨天的数字。今早客户追加的"不要油腻"和"海胆排除"把数字又挖深了。*
+
+底部浮出一行极小的英文水印 —— 一闪,然后没了:
+
+{{unlock_n03|Internal Reference Only — PM-14|hr_email_screenshot}}
+
+*这行字,你不确定是不是眼花。*`,
+      choices: [
+        { key: "A", text: "*“不是让他们松口,是让他们看到更好的。”* 在 ezzzyKOL 把 Category 临时加上测评类,跑出 11 个候选 —— 挑 5 个最亮眼的,直接加进 Aurora 飞书表 · 每人附一行注释 · @ 阿布拿去客户那边推", effects: { 决: 2, 共: 2, 规: -1 }, next: "N04B", flag: "proactive_pitch" },
+        { key: "B", text: "*“不放宽。算了算了,就当健身。”* ezzzyKOL 已经榨干 —— 你把 Upfluence、HypeAuditor、CreatorIQ、Social Blade 各开一个标签页,今晚不打算回去了", effects: { 决: 2, 规: 2, 共: -1, 险: 1 }, next: "N04B", flag: "solo_grind" },
+        { key: "C", text: "*“锁死 3 个钦点,缺口明早再说 —— 大闸蟹在下周,今天 brief 反正不用最终版,明早脑子更清楚。”*", effects: { 规: 2, 决: -1, 险: -1 }, next: "N04B", flag: "deferred_aurora" },
+        { key: "D", text: "*“PM-14。Project Management 第 14 版?还是什么人名首字母?反正怪,截一张存着。”* 截屏整张筛选漏斗 + 水印那一帧", effects: { 规: 1, 险: 2, 决: 1 }, next: "N04B", item: "v2_screenshot", condition: s => s.flags.has("unlock_n03") }
+      ]
+    },
+
+    N04B: {
+      chapter: "第二章 · Brief 风云",
+      title: "5 点半的办公室",
+      summary: "周一收工 · 加完最后一波达人筛选",
+      task: function(s) {
+        if (s.flags.has("solo_grind_excess")) return "Aurora 名单 · 已筛 14 / 15 · 客户拒收 2 个 · 还缺 3";
+        if (s.flags.has("solo_grind_wise"))   return "Aurora 名单 · 已筛 15 / 15 ✓ 完成";
+        if (s.flags.has("proactive_pitch"))   return "Aurora 名单 · 已筛 14 / 15 · 主动 pitch · 缺 1";
+        if (s.flags.has("deferred_aurora"))   return "Aurora 名单 · 锁死 3 钦点 · 9 / 15 · 明早再补";
+        return "Aurora 名单 · 已筛 9 / 15 · 缺 6";
+      },
+      weight: 0.5,
+      preludesByFlag: {
+        v2_screenshot: `*你打开相册,今天多了三张:*\n*早上的 ^_^ · 中午电梯镜子里的自己 · 下午那行 PM-14 水印。*\n*三张照片的共同点是你都不知道自己为什么要存。*`
+      },
+      body: function(state) {
+        const path = state.choices.N03;
+        if (path === "B") {
+          return `*节点标题写的是"5 点半的办公室"。*\n*你手机上的时间是 22:47。*\n*不知道该怪标题还是怪你。*\n\n——\n\n**22:47**。\n\n空调在 18:00 自己停了。\n打印机从 18:00 起没再醒过,像一块断电的鱼。\n工位上 5 个标签页:\`ezzzyKOL\` / \`Upfluence\` / \`HypeAuditor\` / \`CreatorIQ\` / \`Social Blade\` —— 每个屏幕被你挤到只剩一个字母。\n\n[[18:30]] 挖到第 1 个。\n[[19:15]] 第 2 个。\n[[20:02]] 第 3 个 —— 你下楼买了第二杯咖啡,收银员看你像看熟客。\n[[20:47]] 第 4 个。\n[[21:30]] 第 5 个 —— 这个花了 45 分钟,你差点想放弃。\n\n*然后你在 HypeAuditor 一个"冷门品类 cross-over"推荐里,刷到一个叫 **@JesseFun**(620K · 让 AI 出洋相系列)的人。*\n*粉丝 620K,刚过客户阈值。*\n*他做的系列叫 \`让 AI 在日常场景里丢人\`。*\n*上一条视频标题:"**让 Claude 辨认菜市场的虾是不是活的**"。*\n*Claude 给了一堆"据我观察尾部不动它可能不活跃"的学术废话。*\n*老板娘拿起来一捏 —— "这就是活的"。*\n*播放破百万。*\n*他就是第 6 个。*\n\n——\n\n**22:45**,保洁阿姨的推车到了你这层。\n\n她看你一眼:"还不走啊?"\n你说:"阿姨,我还要坐一会。"\n她说:"你们年轻人哪天能不用坐这么晚就好咯。"\n\n*你咧嘴笑了一下。*\n\n*补齐 6 人了。*\n*胃在告诉你今天只吃了两颗高粱饴。*\n*屏幕右下角 push:"**您本周加班时长已超建议值**"。*`;
+        }
+        if (path === "C") {
+          return `*缺口留到明早了。*\n*你的脑子在今天第一次出现"下班"这两个字 —— 不是作为动词,是作为名词。*\n\n——\n\n**17:42**。\n\n办公室的空调自己降了半度。\n你在收包的时候,Jasper 端着一杯 Blue Bottle 过来,走得不紧不慢。\n\n"哎,"他说,"Aurora 那 3 人缺口明天咋办啊?客户那边下午 4 点又在群里 @ 了一下阿布。"\n\n*你没看到这条 @。*\n*你在专心做完其他 4 个项目的收尾。*\n\n"明早再说,"你说,"反正 brief 这版不用最终版。"\n\nJasper 点头,但你看得出他觉得这不是一个答案。\n他走开了,Blue Bottle 在手里晃出一点起雾感。\n\n*五点半下班的代价,你明天还了就行。*`;
+        }
+        if (path === "D") {
+          return `*缺口留到明早了。*\n*但你今天的脑子第一次出现"下班"两个字 —— 不是作为动词,是作为名词。*\n\n——\n\n**17:42**。\n\n办公室的空调自己降了半度。\nJasper 端着 Blue Bottle 过来,看了你屏幕一眼:"哎你刚截了个啥?"\n\n"没啥,"你说,"客户的版本号水印,看着怪。"\n\n他笑了一下:"你想多了哥,版本号不就版本号。"\n\n*他笑得很轻 · 轻到你几乎以为他没在笑 —— 你不太确定为什么"水印"和"他这一下笑"会同时停在你脑子里。*\n\n"那 3 人缺口呢?"他问。\n"明早再说。"\n\nJasper 走开了。`;
+        }
+        // path === "A" or fallback
+        return `*阿布 17:05 微信回:"**收到 我明天上午拿去跟客户那边聊一下哈 你先走 辛苦**"*\n*你把飞书表里那 5 个候选的注释又扫了一遍 · 第 3 行有个达人 ID 拼错了一个字母。*\n*你想:改,还是算了。*\n*算了。*\n\n——\n\n**17:42**。\n\n办公室的空调自己降了半度。\n打印机从某个下午起在偶尔叹一口气,像感冒没好的同事。\n\nVivian 路过你工位 —— 她笔记本一直亮着 · 8 个项目同时 ping 着。她端着一杯黑咖,扫了你一眼:"走啦?"\n你说"嗯"。\n她说:"早点走。Jasper 这周交的名单 5 分钟就发回来了 · 客户那边说太套路了 —— 都是上个项目见过的脸。你别学他这种交差法。"\n\n*Vivian 看人不看表 —— 她看 deliverable。*\n*你今天交的是 5 个候选 · 都附了具体注释。*\n*你不知道她算的是赞还是骂。*\n\n你收拾包,电脑屏保亮了又灭。\nKonstantin 明天会发来 KaptainK 的报价 —— 你已经能预感数字里少不了 8。`;
+      },
+      choices: [
+        { key: "B1", text: "*“够了。发给阿布审,收工。”*", effects: { 决: 1, 共: 1 }, next: "NT1A", flag: "solo_grind_wise", condition: s => s.choices.N03 === "B" },
+        { key: "B2", text: "*“不够精准。再挖到第 8 个。”*", effects: { 决: 2, 险: 1, 共: -2 }, next: "NT1A", flag: "solo_grind_excess", condition: s => s.choices.N03 === "B" },
+        { key: "X1", text: "收拾包 · 下班走人。", effects: { 共: 1, 规: 1 }, next: "NT1A", condition: s => s.choices.N03 !== "B" },
+        { key: "X2", text: "*“算了 · 那行拼错的达人 ID 还是改了吧。”* 在工位再坐 5 分钟。", effects: { 决: 1, 规: 1 }, next: "NT1A", flag: "fixed_typo", condition: s => s.choices.N03 !== "B" }
+      ]
+    },
+
+    // ---------- 第三章 · 平凡两天 ----------
+    NT1A: {
+      chapter: "第三章 · 周二站会",
+      title: "Aurora 站会本体",
+      summary: "周二 09:30 · 阿布拉小会 · 你和 Jasper 跟阿布对 Aurora 进度",
+      task: "周二 09:30 · 站会 · 对进度 · 分工 · 阿布在等你说话",
+      weight: 1,
+      body: function(state) {
+        const parts = [];
+
+        // MODULE 1 · 站会前 心理 prelude(取最高优先级 flag 的一段)
+        if (state.flags.has("solo_grind_excess")) {
+          parts.push(`*你昨晚 02:10 才发完最终版本回家。*\n*打车回家时司机问"兄弟刚下班?" 你说"嗯"。*\n*今天 09:07 你想趁站会前再扫一眼那 8 个达人 —— 端起咖啡,滑了一下,洒了。*\n*9:05 擦完。9:07 开机。*\n*今天站会要讲两个 K。*`);
+        } else if (state.flags.has("solo_grind_wise")) {
+          parts.push(`*你昨晚 22:50 发给阿布的 6 人文档,他 23:11 回了一个 👍。*\n*你今天 09:28 坐下,比平时早 2 分钟,咖啡这次没洒。*`);
+        } else if (state.flags.has("proactive_pitch")) {
+          parts.push(`*Aurora 项目群 阿布 9:07 @ 你:"**哎 昨晚 5 人飞书注释看了 · 写得到位 · 客户下午会要带过去 · 不用再调了**"*`);
+        } else if (state.flags.has("deferred_aurora")) {
+          parts.push(`*Jasper 在你前面进会议室。*\n*他转头:"哎你来啦 · 那 3 人缺口你想好咋办没?"*\n*你没想好。你刷牙时过了一遍,通勤时又过了一遍。还是没想好。*`);
+        }
+
+        // MODULE 2 · 共通开场
+        parts.push(`**9:30**。\n\n你刚坐下 · 电脑还没完全唤醒。\n\n阿布站到你工位侧面 · iPad 横在手里:\n"哎 · {playerName} 找下 Jasper · 咱仨对一下 Aurora 吧 · 一会儿就好。"\n\n——\n\n小会议室。3 人。\n\nJasper 坐你对面 · 一手电脑 · 一手咖啡。\n\n阿布把 iPad 立在桌上:\n"客户说周五要把所有人都定下来哦 · brief 他们马上给到。"\n"现在我们这边什么进度啦。"`);
+
+        // MODULE 3 · 阿布话术(N01 flag · 3 选 1)
+        if (state.flags.has("compliant_a")) {
+          parts.push(`"{playerName} · 你那边周一 15 人飞书基本收尾了吧?" 阿布瞟你一眼。\n"那 Aurora 这边客户那块还是你接着跟哈 · 辛苦你扛一扛 · 我这边盯。"\n\n*他说"还是你接着跟"的语气 · 像在说"这事本来就该你做"。*`);
+        } else if (state.flags.has("ghosted_bryson")) {
+          parts.push(`"{playerName} · Jasper · 两位周一后都在 ezzzyKOL 里跑哎 · 那 Aurora 后面这块你俩自己分一下哈 · 分不分得开你俩自己定。"\n\nJasper 抬头 · 慢慢说:"哦.......具体我接哪块?"\n\n*你没见过 Jasper 这个表情。*\n*你原来以为他从来不 care。*\n*现在他 care 了 · 但 care 的方式是完全不懂。*`);
+        } else if (state.flags.has("pro_alignment")) {
+          parts.push(`"{playerName} · 下午 3 点的客户会我带哈 · 你跟着进会议室 · 周一筛的进度同步一下就行。" 阿布看着你。\n"有想说的提前过下嘛 · 别等客户问你才想。"\n\n*你点头。*\n*阿布说"提前过下"的那一秒 · 你能感觉到今天的咖啡量不够。*`);
+        } else {
+          // N01 D fallback(玩家选了 D 截图 · 没回阿布)
+          parts.push(`阿布翻 iPad 翻到你那行 · 抬头:"哎 {playerName} · 你昨天 ……没回我哎?"\n\n你说:"哦 · 看到了 · 下午给你。"\n\n阿布"嗯"了一声 · 没追。\n\n*他没追 · 但他记住了你没回。*`);
+        }
+
+        // MODULE 4 · N03 反馈(N03 flag · 4 选 1)
+        if (state.flags.has("proactive_pitch")) {
+          parts.push(`"对了 {playerName} · 你那 5 人飞书我刚转给客户产品那边了 · 他们说今天会上一起看哈。"`);
+        } else if (state.flags.has("solo_grind_wise")) {
+          parts.push(`"{playerName} · 昨晚 22:50 那 6 人飞书 · 排得挺干净哎。" 阿布没说更多 · 点了一下 iPad。\n"那 6 人我一会发客户 · 你今天就按这版往下推哈。"\n\n*他没说"辛苦"。*\n*但你知道他看见了。*`);
+        } else if (state.flags.has("solo_grind_excess")) {
+          parts.push(`"{playerName} · 我看你昨晚 22:50 飞书加了一版 6 人 · 然后 02:10 又改成 8 人 · **我现在给客户推的是哪版啊?**"\n\n你张嘴要回答。\n\n"02:10 那版 · KaptainK 那版。"\n—— 你想说的。\n\n但你手先一步打开 iPad · 想在 Aurora 飞书表里筛一下 KaptainK 给阿布看。\n\n搜索框里你打的是:\n\n\`aptaintain\`\n\n*K 没出来。你按了 3 次。*\n\n阿布看你按键盘 3 次 · 什么都没说 · 转头问 Jasper:"KaptainK 这块 Konstantin 那边报价回了没?"\n\n*Jasper 低头喝了一口咖啡 · 慢慢说:"哦 · 我下午发你。"*\n*阿布"嗯"了一声 · 没看你。*`);
+        } else if (state.flags.has("deferred_aurora")) {
+          parts.push(`"{playerName} · 那 3 人缺口今天打算咋补啊?" 阿布问你。\n"客户产品昨天下午 4 点群里 @ 我 · 我也没怎么回得上来。"\n\n*你也回不上来。*\n*你刷牙时过了一遍 · 通勤时过了一遍 · 现在你还没有答案。*`);
+        }
+
+        // MODULE 4.5 · fixed_typo 微回响(N04B X2 玩家:昨晚改了那个拼错 ID)
+        if (state.flags.has("fixed_typo")) {
+          parts.push(`阿布顺手翻了一下 iPad:"哦对 · 你昨晚那行拼错的达人 ID 改了哎 · 客户产品那边今早扫一眼没翻车 —— 谢了。"`);
+        }
+
+        // MODULE 5 · 你这周怎么 split(mid-meeting 选项前奏)
+        parts.push(`阿布看 iPad 看了两秒 · 抬头:\n\n"那这周分工就这样定哈 —— **{playerName} 客户那边对接 · 达人沟通你来扛** · Jasper 你帮 backup · KaptainK 那单 Konstantin 那边谁先收到回复就先甩群里。"\n\n*9:38。* —— *你电脑上的咖啡渍还没干完。*\n*阿布的 iPad 还立在桌上 · 屏幕朝你这一侧。*\n*Jasper 喝了一口咖啡 · 等你说话。*`);
+
+        return parts.join("\n\n");
+      },
+      choices: [
+        { key: "A", text: '*"好的 · 客户后续我跟。"*', effects: { 决: 1, 规: 1, 共: -1 }, next: "NT1B", flag: "meeting_compliance" },
+        { key: "B", text: '*"Jasper 也在 Aurora · 客户对接和达人沟通我们 share 一下?"*', effects: { 决: 2, 共: 1, 规: 1 }, next: "NT1B", flag: "meeting_share" },
+        { key: "C", text: '*"周五最终名单 deadline 是几点 · 我把时间表先列出来。"*', effects: { 决: 2, 规: 1, 险: 1 }, next: "NT1B", flag: "meeting_pivot" },
+        { key: "D", text: '*"等下 ——"* 把屏幕转向 Jasper · 给阿布看搜索框 `aptaintain`(K 键 demo)', effects: { 决: -1, 共: 1, 险: 2 }, next: "NT1B", flag: "meeting_k_demo", condition: s => s.flags.has("solo_grind_excess") }
+      ]
+    },
+
+    NT1B: {
+      chapter: "第三章 · 周二站会",
+      title: "9:42 · 米拉抱箱走过",
+      summary: "站会还没散 · 米拉抱纸箱从玻璃门外路过 · 阿布隔着玻璃看了一眼",
+      task: "周二 09:42 · 站会还没散 · 米拉从玻璃门外路过",
+      weight: 1,
+      preludesByFlag: {
+        meeting_compliance: `*阿布点头 · 没说"辛苦" —— 直接转下一个议程。*`,
+        meeting_share: `*Jasper 抬眼:"哦 · 那 KaptainK 这单 share 怎么 share?"*\n*阿布:"share 啊就 ……你俩自己定哈 · 我不 micromanage。"*\n*你跟 Jasper 对了一眼 · 都没接话。*`,
+        meeting_pivot: `*阿布:"周五 EOD 嘛 · 你别紧张。"*\n*但他讲下一个议程时眼神没回到你身上。*`,
+        meeting_k_demo: `*阿布看屏幕 0.5 秒 —— "你这是 K 键?……行 · 我让 IT 周三上午来。"*\n*Jasper 笑了一下 —— 极轻 —— 然后正色问下一条进度。*\n*你不确定他笑的是 K 键还是你。*`
+      },
+      body: function(state) {
+        const parts = [];
+
+        // MODULE 1 · 米拉露面
+        parts.push(`对到一半 · 会议室玻璃门外路过一个人。\n\n是 **米拉** —— 她抱着一个纸箱 · 另一只手费劲拎着一个**盲盒展示架** —— 上周她刚兴致冲冲搬来的那个。\n\n她和阿布隔着玻璃门对了一眼。\n阿布没有挥手。\n米拉也没有。\n\n*她上周才跟你展示过架子上那几个手办 · 一边摆一边讲哪个是隐藏款。*\n*她也跟你说她 KPI 112%。*\n*她转正答辩的材料 · 周日晚上发你 review · 还躺在你草稿箱里。*`);
+
+        // MODULE 2 · Seraphine 叠加(hr_email_screenshot 持有)
+        if (state.items.has("hr_email_screenshot")) {
+          parts.push(`米拉走过后 5 秒 · 玻璃门外又有一个人经过。\n\n是 **Seraphine** · HR 总监。\n她没跟着米拉的方向走 —— 她是反着走的。\n手里拿着一个 iPad · 屏幕朝下。\n\n她扫了一眼站会 · 嘴角 ^_^ 的弧度往上收了一下。\n\n*你手指无意识摸向口袋里的手机。*\n*手机没解锁。*\n*但你知道那张 ^_^ 截图还在相册里。*`);
+        }
+
+        // MODULE 3 · 结尾
+        parts.push(`**9:44**。\n阿布把 iPad 合上:"那咱们就先这样啦 · 达人的事希望两位老师再加把劲 · 这个客户有大大大预算。"\n\n你和 Jasper 一起走出会议室。`);
+
+        return parts.join("\n\n");
+      },
+      choices: [
+        { key: "A", text: '*"先回工位 · 早上堆的群消息得扫一遍了。"*', effects: { 决: 1, 规: 1, 共: -2 }, next: "NT2" },
+        { key: "B", text: '*"拉 Jasper 去茶水间 —— 米拉纸箱的事他肯定听说了。"*', effects: { 共: 1, 决: 1, 险: 1, 规: -1 }, next: "NT2", flag: "asked_jasper_mila" },
+        { key: "C", text: '*"我追出去。"* 你站起身 —— 阿布愣了一下 · Jasper 抬眼看你。\n阿布:"你先去 · 我们等你两分钟。"', effects: { 共: 3, 规: -1, 险: 1 }, next: "NT2", flag: "caught_mila" },
+        { key: "D", text: '*"阿布留一下 —— 下午 3 点会的议程我想先过一遍。"*', effects: { 决: 2, 规: 2, 共: 1 }, next: "NT2", flag: "prepared_client_meeting", condition: s => s.flags.has("pro_alignment") }
+      ]
+    },
+
+    NT2: {
+      chapter: "第三章 · 散会余韵",
+      title: "10:30 · 米拉余韵 + 询价邮件",
+      summary: "周二 10:30 · 米拉刚被劝退 · 你回工位准备发 12 封询价邮件",
+      task: "Aurora 询价邮件 · 12 封待发 · 海外达人占大头",
+      weight: 2,
+      preludes: {
+        NT1B_A: `你回到工位。\nAurora 项目群一夜涨了 19 条 · 大半是 Nolan @ 阿布。\n*你飞书侧栏的"米拉_转正答辩 · review"那个 doc · 灰色置顶 · 你还没回。*`,
+        NT1B_B: `茶水间。雀巢机第三天坏。\nJasper 自己手冲 · 慢悠悠。\n\n*"米拉的事 ……"* 你刚开口。\n*"嗯。"* Jasper 没抬头 · "周一阿布跟 Vivian 聊过一次。"\n*"你怎么知道?"*\n*"Vivian 微信我一句:'米拉那俩实习生交的名单注释都是 ezzzyKOL 自动出的 · 客户问 follow-up 一句都答不上来。'"*\n*"……"*\n*"你别跟我学。我可没说啊。"* Jasper 抬头 · 慢慢加了一勺糖。`,
+        NT1B_C: `电梯口。米拉刚按完下楼。\n\n你跑过去:"米拉 ——"\n\n她回头 · 眼眶有点红 · 但脸上还笑着:\n*"哎你不是开会嘛 · 别耽误。"*\n\n*"你 ……"* 你不知道说什么。\n\n*"没事。转正答辩综合评分不达预期 · 同期 5 个 3 个过 · 我那 2 个之一。"*\n*"我自己也没准备好。"*\n*"你那个 review 草稿 · 别再写了 · 删掉就行。"*\n\n电梯叮一声。\n\n*"我先走啦 · 项目加油。"*\n\n——\n\n你 9:51 回到会议室。阿布看你一眼,什么都没问。\n9:55 阿布说"那就这样啦",合 iPad。\n\n*她说"我自己也没准备好"。*\n*你听懂了 —— 也没听懂。*`,
+        NT1B_D: `阿布跟你在小会议室多坐了 8 分钟。\n他翻 iPad 把下午 3 点客户会的议程过给你:Nolan 会到 · Aurora 客户市场 VP **Yvonne** 也会到 · Sam 不去。\n"你今天就是带着 12 封询价邮件的进度去对一下哈 · 别紧张。"\n\n*9:52 你回到工位。*\n*Aurora 项目群一夜涨了 19 条 · 你扫了一眼 · 都是 Nolan 早上跟阿布的 brief 同步。*\n*你心里有底 —— 客户会上你不会被打断。*`
+      },
+      body: `你打开 Aurora 飞书表。\n\n**还差 8 人没定。**\n\n阿布 10:05 群里 @ 你:\n\n> "对了 · 中午前先把询价邮件挨个发出去吧 · Nolan 那边要在群里看到我们今天动起来。"\n\n—— 你今天要给 12 个达人发邮件 · 海外的占大头。\n—— 顶部钦点 3 个里 · **RourkeHolly** 经纪团队三天前就 auto-reply"Email only. Do not chase." —— 但你今天必须 chase 12 个人。\n\n*飞书表 RourkeHolly 那行 · 你自己留的 internal note 还在:*\n\n*\`一姐 不催 不抢 不夸 一封正式询价邮件就好\`*`,
+      choices: [
+        { key: "A", text: "*\"套模板 · 12 封一起发 · 90 分钟搞定。\"*", effects: { 决: 1, 规: 2, 共: -1 }, next: "NT3", flag: "emails_template" },
+        { key: "B", text: "*\"RourkeHolly 单独写 · 措辞克制 · 其他 11 人模板。\"*", effects: { 决: 2, 共: 1, 规: 1 }, next: "NT3", flag: "emails_holly_priority" },
+        { key: "C", text: "*\"12 人全部一对一手写理由 —— 反正这周质量比量重要。\"* 一上午烧光", effects: { 共: 3, 规: -1, 决: -1, 险: 2 }, next: "NT3", flag: "emails_handcraft" },
+        { key: "D", text: "*\"先翻一下 Vivian 给 Jasper 那条原话 —— 如果她真说'答不上 follow-up' · 那这就是米拉的死因。\"*", effects: { 共: 2, 险: 2, 决: 1 }, next: "NT3", item: "vivian_quote_overheard", condition: s => s.flags.has("asked_jasper_mila") }
+      ]
+    },
+
+    NT3: {
+      chapter: "第三章 · 散会余韵",
+      title: "16:30 · 三蟹一体",
+      summary: "周二 16:30 · 客户老板 Sam 通过 Nolan 转语音 · brief 加'三蟹一体 + Skills 模式'",
+      task: "周二 16:30 · Sam 又改 brief · 17:30 前给 Nolan 一版 4 行 bullet",
+      weight: 2,
+      preludes: {
+        NT2_A: `*第一波回笼 5 封:Emma / Jesse / Molly / Sarah / Vina · RourkeHolly 还是 auto-reply · Konstantin 还是"出差中"。*`,
+        NT2_B: `*第一波回笼 5 封 · 你给 RourkeHolly 单独写的那封 16:08 显示"已读" · 没回。*\n*"已读"是一种回复。*`,
+        NT2_C: `*你 16:00 才把第 9 封发完。剩 3 封还没动。*`,
+        NT2_D: `*你拿到 Vivian 那条原话截图 · 存到相册 · 给文件夹改名:"awareness"。*\n*你不知道为什么存这些 · 就像不知道为什么有人收集彩票存根。*`
+      },
+      body: `**16:25**。\n\n你正打算 17:30 走。\n\n群消息 · Nolan @ 阿布 + @ 你:\n\n> Nolan: 各位 sorry 又来一次哎\n> Nolan: 我们老板(Sam)中午跟硅谷那边一个 partner 视频完 · 让我转一段语音给你们 · 我也不知道他说的是啥\n> [voice memo · 47 秒]\n\n转写:\n\n> *"哎那个我们这一版 Aurora 不是大闸蟹 · 我们要的是大闸蟹但**高级感**的那种 ——"*\n> *"—— 但别看起来贵啊 · ROI 你们懂的 ——"*\n> *"—— 调子要 Manus demo 那种 · 但又要 Operator 的沉稳 ——"*\n> *"—— 加一个 **Agent 模式** · 跟之前公母那版拼 —— 公蟹生产力 · 母蟹陪聊 · Skills 模式找菜谱 · **三蟹一体哎**"*\n\n> *"finalized brief 周三给到。"*\n\n——\n\n你看这段语音转写看了半分钟。\n\n你盯着 {{unlock_nt3|"要高级感,但别看起来贵"|hr_email_screenshot}} 这几个字看了半分钟。\n\n阿布 16:30 群里跟一句:\n\n> "@{playerName} 我也没听懂哎 · 你帮我整理个 bullet 给 Nolan · 让他回 review 我们对没对上 · 17:30 前发哈 · Nolan 5 点要走。"\n\n—— Nolan 也是夹心层 —— 你和阿布 vs Sam · 中间是 Nolan。\n—— "三蟹一体"是什么 · 在群里没有任何人(包括 Sam 自己)知道。\n\n*Vivian 路过你工位 · 端着黑咖。她看了你屏幕一眼 · 没停。*\n*但你听见她对自己嘀咕了一句 ——*\n*{{unlock_nt3_vivian|"达人是巨婴 · 客户也是巨婴 · 你做久了 · 都是在哄婴儿。"|hr_email_screenshot}}*`,
+      choices: [
+        { key: "A", text: "*\"硬翻成 4 行 bullet:差异化 / 沉稳基调 / 三模态 Agent / ROI 可控 · 17:25 发 Nolan。\"*", effects: { 决: 2, 规: 2, 共: -1, 险: -1 }, next: "N_TUE_NIGHT", flag: "jargon_translated" },
+        { key: "B", text: "*\"微信阿布:'我能问下 Sam 说的 Manus demo 是哪个吗 · 我先对上口径再翻'\"*", effects: { 决: 1, 共: 1, 险: 1, 规: -1 }, next: "N_TUE_NIGHT", flag: "clarified_with_am" },
+        { key: "C", text: "*\"先吃饭。bullet 18:30 再发。\"* —— Nolan 18:00 已下班", effects: { 决: 1, 共: -1, 险: 1, 规: -1 }, next: "N_TUE_NIGHT", flag: "prioritized_self" },
+        { key: "D", text: "*\"听到 Vivian 那句 · 默默把它写进飞书的 'cheat sheet' 页签。\"*", effects: { 共: 2, 险: 2, 决: 1 }, next: "N_TUE_NIGHT", item: "vivian_quote", condition: s => s.flags.has("unlock_nt3_vivian") },
+        { key: "E", text: "*\"打开你的 AI 助手 · 把 Sam 那段 47 秒语音转写贴进去 —— 让它整理 4 行 bullet · 顺便让它解释「三蟹一体」是不是真的概念。\"*", effects: { 决: 3, 共: -1, 规: -2, 险: 2 }, next: "N_TUE_NIGHT", flag: "ai_decoded", condition: s => s.flags.has("solo_grind_excess") || s.flags.has("pro_alignment") || s.flags.has("proactive_pitch") || s.items.has("hr_email_screenshot") }
+      ]
+    },
+
+    N_TUE_NIGHT: {
+      chapter: "第三章 · 散会余韵",
+      title: "周二 23:30 · 望京回家路",
+      summary: "周二晚下班 · 出租车上 · 米拉离职第一天 + 煎饼摊预埋 + 闹钟设了",
+      task: "周二夜 · 下班路上 · 高德预计 18 分钟",
+      weight: 1,
+      preludes: {
+        NT3_A: `*你 17:25 发完 4 行 bullet · Nolan 18:00 回 OK · 你 20:30 还在加最后两封询价邮件 · 21:50 才出公司 · 22:08 打到车。*`,
+        NT3_B: `*阿布 19:11 私聊回:"Manus 我问到了 · Sam 是看了 hbr.org 一篇文章里截的图 · 他自己也没用过。"*\n*你 22:00 出公司。今天对上口径就行 · 不至于通宵 · 22:15 上车。*`,
+        NT3_C: `*你 18:32 才把 bullet 发出去。Nolan 已经离线。*\n*你 19:30 出公司 —— 这周第一次踩着饭点下班 · 19:42 打到车。*\n*下班路上你刷飞书 —— Nolan 给你回了一个"。"*\n*句号比批注还沉。*`,
+        NT3_D: `*"达人是巨婴 · 客户也是巨婴。"*\n*你 22:30 出公司路上过了一遍这句话 · 22:48 上车。*\n*你把它写进了手机备忘录 · 标题是"V说的"。*\n*莫名觉得 · 今晚能睡着。*`,
+        NT3_E: `*你 17:18 把 4 行 bullet 发了 · AI 助手版本 —— 你自己改了两个字 · 主要保留它写的。*\n*Nolan 17:24 群里 OK。*\n\n*17:32 阿布私聊:"哎你今天这 4 行 · 写得有点不像你哎。"*\n*"……怎么了?"*\n*"挺通顺 · 但客户那边 Yvonne 看着像谁 paste 的。周三客户会上你别 paste · 自己讲哈。"*\n\n*22:51 你刚到家 · Aurora 项目群弹一条 ——*\n*Nolan 转 Sam:"你那 4 行我让 Cursor 又重写了一版 v2 加了点 ROI 锚点 · 你看下 · 周三对的时候照这版讲哈。"*\n*[附 Cursor 链接]*\n\n*Sam 用 Cursor 写 brief。*\n*你用 AI 助手反向解码。*\n*Sam 又用 Cursor 重写你的解码。*\n*大家都在用 AI · 但都装作不在用 AI · 套了三层。*`
+      },
+      body: function(state) {
+        const milaThought = state.flags.has("caught_mila")
+          ? `*飞书侧栏的"米拉_转正答辩 · review"那个 doc · 灰色置顶。*\n*米拉说过让你删。*\n*你盯着那个灰色 doc 3 秒。*\n*你没删。*\n*—— 不是因为不舍 · 是因为删了就等于承认那天电梯口是你们最后一次说话。*`
+          : `*飞书侧栏的"米拉_转正答辩 · review"那个 doc · 灰色置顶。*\n*你想点开删掉它。*\n*然后想 —— 删了她就真的不在这家公司了。*\n*你没删。*`;
+        return `出租车上。\n\n你坐副驾驶后排。\n司机静音模式 · 一直没说话。\n窗外望京 SOHO · 灯还亮着一半。\n\n—— 高德推送行程预计 18 分钟。\n—— 你没开飞书。\n—— 你没开微信。\n—— 你就看着窗外。\n\n*米拉今天是不是就在这条路上打过车?*\n*她那盆绿萝带回家了吗。*\n\n——\n\n路过双井那个煎饼摊 · 还在出摊。\n*你想 —— "明天早上下楼吃个煎饼吧 · 加两个蛋。"*\n\n——\n\n到家。\n你刷牙的时候盯了镜子两秒。\n镜子里的你看起来累 · 但没崩。\n\n你设闹钟 —— **周三早 7:30**。\n你爬上床。\n\n${milaThought}`;
+      },
+      choices: [
+        { key: "A", text: "关灯 · 睡。", effects: { 共: 1 }, next: "NW1" },
+        { key: "B", text: "不关灯 · 让屏幕亮着 · 翻一会儿手机才睡。", effects: { 共: 1 }, next: "NW1" }
+      ]
+    },
+
+    NW1: {
+      chapter: "第四章 · 周中风暴",
+      title: "周三 11:00 · Sam 审名单",
+      summary: "周三 11:00 · 客户老板 Sam 通过 Nolan 转 4 条 quick comments · KaptainK 越级 18W",
+      task: "Aurora · Sam 4 条 quick comments 待回 · KaptainK 18W 越级",
+      weight: 3,
+      preludes: {
+        N_TUE_NIGHT_A: `*周三早 7:30 闹钟你按掉了 · 7:43 起床 · 7:55 楼下煎饼摊。*\n*你点了一份煎饼加两个蛋 —— 比你昨晚答应自己的多了一个蛋。*\n*9:24 进电梯。*`,
+        N_TUE_NIGHT_B: `*周三早 7:30 闹钟响了你没听见 · 7:55 被手机掉床上砸醒。*\n*你昨晚翻手机翻到 1 点半 · 刷了 47 条小红书 · 没有一条跟工作有关。*\n*8:05 楼下煎饼摊 —— 加一个蛋 · 没力气加两个。*\n*9:28 进电梯。*`
+      },
+      body: `**周三 09:30**。\n\n你打开飞书 —— 今天的待办比昨天多 11 项。\n\nRourkeHolly 还是没回。\nKonstantin 还是"出差中"。\n\n10:58 · OA 弹窗:\n\n> 标题:【需操作】SSO 单点登录重新验证 · 第 14 批次\n> 发件人:it-ops@growmax.io\n> \n> 第 14 批次同事您好:\n> \n> 您当前 **PM-14 · 第 14 批次** 的 SSO 鉴权窗口将于今日 17:00 关闭 ·\n> 请在过期前完成 4 步验证。\n> 如有问题 · 请联系您的 **批次联络人**。\n> \n> —— Growmax IT 运营组\n\n*"第 14 批次"。*\n*"批次联络人"。*\n*这俩词你这两年的 OA 邮件里从来没出现过 —— 但今天第一次出现。*\n*你 mark 了一下 · 等中午再处理。*\n\n——\n\n**11:00**。\n\n群里 Nolan 转发 Sam 微信(Sam 不进群)4 条 quick comments:\n\n> 1. RourkeHolly 周二还没回?她周一不是说"考虑"吗\n> 2. TechPeter 你们怎么扣的?海胆 Copilot 上周被 OpenLab 收购 · 不算我们竞品了\n> 3. KaptainK 经纪人那边给我直接邮件 18W · 你们之前不是说不会超 13W?\n> 4. NoTechBro "吐槽加 1W" 是什么操作 · 解释一下\n\n*4 条评论 · 4 个炸弹。*\n*Konstantin 越级直接邮件给 Sam · 把你 cut out · 这是行业 dirty trick。*\n\n阿布 11:04 跟一句:\n\n> "@{playerName} · 我 11:30 才能脱身 · 你先稳住 · 一条条来哈。"\n\n*你的咖啡还没喝完。*\n\n**11:08** · Nolan 单独私聊你(不在群):\n\n> Nolan: {playerName} 我也尴尬 · Sam 那个 18W 邮件他没抄我 · 我刚才才看到\n> Nolan: 你这边怎么处理 · 我配合\n\n*你正想回 Nolan · 他又发了一条:*\n\n> Nolan: 还有一件事 · 你别 forward 也别截图\n> Nolan: Holly 经纪人 Lina 周一其实跟我通过电话\n> Nolan: 她说 Holly 这周不接 ad —— 海外有 PR crisis 她要先处理 · 周二她整个团队连邮件都没看\n> Nolan: 但她让我**不要跟 Sam 说这个** —— Sam 知道了会盯时间表 · 反而把 Holly 也得罪\n> Nolan: 所以 Sam 第 1 条那个 quick comment · 答案是「Holly 团队这周不在线」· 但你不能这么写\n> Nolan: 我现在告诉你 · 是因为你今天要 hold 这单 · 你心里得有数`,
+      choices: [
+        { key: "A", text: "*\"按 4 条顺序回 —— Holly 我再 follow / TechPeter 重新评估 / KaptainK 我跟 Konstantin 对一下 / NoTechBro 我解释吐槽营销。\"*", effects: { 决: 2, 规: 2, 共: 1, 险: -1 }, next: "NW2", flag: "orderly_response" },
+        { key: "B", text: "*\"群里 @ 阿布 + Nolan:'Konstantin 越过我直接给 Sam 报价 · 我建议先冻这单 · 流程上要 escalate。'\"*", effects: { 决: 3, 险: 2, 规: 1, 共: -2 }, next: "NW2", flag: "escalated_konstantin" },
+        { key: "C", text: "*\"全部'稍等阿布 11:30 sync 后回'· 不当场答 · 给阿布留时间。\"*", effects: { 决: -1, 规: 2, 共: 2, 险: -1 }, next: "NW2", flag: "bought_time_for_am" },
+        { key: "D", text: "*\"打开 OA 重新登录 —— 等加载时你看到弹窗右下角小字:\`Mirror Auth v14 · For Cohort Personnel Only\`。\"*", effects: { 决: 1, 险: 3, 规: -1 }, next: "NW2", item: "saw_mirror_auth", condition: s => s.items.has("hr_email_screenshot") }
+      ]
+    },
+
+    NW2: {
+      chapter: "第四章 · 周中风暴",
+      title: "周三 16:30 · OA + Gordon + Emma",
+      summary: "周三 16:30 · OA 故障 + Gordon 反问 + Emma usage rights 突袭 12 个月 18W",
+      task: "周三 16:30 · OA 故障 · Emma 18W 突袭 · Vivian 警告别接",
+      weight: 3,
+      preludesByFlag: {
+        orderly_response: `*Sam 中午回:"4 条都看到了 · TechPeter 加进 candidate 重新筛 · KaptainK 那 18W 我们 hold · 等 Konstantin 解释 · NoTechBro 吐槽我们买单加 1W。"*\n*稳。*`,
+        escalated_konstantin: `*阿布跟 Sam 11:45 单独 wechat 5 分钟。*\n*Sam 12:08 群里:"KaptainK 这单先 hold · 我让 Nolan 那边重新过流程。"*\n*Konstantin 14:00 邮件 cc Sam:"价格已是底线 · 请勿干预我方与 brand 直接沟通。"*`,
+        bought_time_for_am: `*阿布 11:35 群里挨个回了 4 条 · 你刚好下班吃饭。*\n*回来你发现 Sam 12:10 群里一句:"@{playerName} 你今天不在?"*`,
+        saw_mirror_auth: `*你 14:30 又看了一眼那个 OA 弹窗 —— 右下角小字 \`Mirror Auth v14 · For Cohort Personnel Only\` 还在。*\n*"Cohort"。这个词你第一次见是在公司年会的 PPT 里 —— "S 级 Cohort 培养计划" —— 当时你以为是营销话术。*\n*现在你不太确定。*`
+      },
+      body: `**16:20**。\n\nNW1 4 条 Sam 评论 · 你按选择处理完。\n你刚 push 完 NoTechBro 的吐槽报价(Nolan 转 Sam 接受 · 加价 1W 通过)。\n\nOA SSO 报错 —— 你飞书登不进去。\n你抬头。\n角落 {{unlock_nw2|Gordon|hr_email_screenshot}} 的兜帽**动了一下**。\n\n你叹了口气 · 微信 Gordon。\n你:"哥能帮我搞下 OA 吗 飞书都登不上"\nGordon 28 分钟没回。\n\n—— 28 分钟后。\nGordon 微信回:"你那 OA 是哪年部署的"\n\n*这不是回答 · 是反问。*\n*Gordon 不修 OA · Gordon 在评估 OA。*\n\n——\n\n**16:48**。\n\nOA 还没好。你打开邮箱准备改用 webmail。\n\n—— 你看到一封今早 09:11 收到的邮件 · 你之前没注意:\n\n> From: hr-system@growmax.io\n> Subject: [Awareness] You have been added as a recipient\n> Body: (空)\n> **抄送列表(BCC 你):seraphine@growmax.io · pm14-ops@(隐去)**\n\n*"BCC 你"。*\n*你不该看到这封。*\n*HR 系统自动抄送 bug · 还是有人故意把你加进去?*\n\n——\n\n**16:51** · Emma WhatsApp 弹出来:\n\n> Emma: hi {playerName}\n> Emma: 我跟我经纪人 review 了一下合同 · 6 个月不够 · 客户那边要的是"全网+海外+短视频+长视频"\n> Emma: 我们最少得 12 个月 · 12 个月 + 全权 · 报价 18W 包打包\n> Emma: 不议价\n\n**16:53** · Vivian 微信你(她从来不主动发):\n\n> Vivian: 哎 Emma 这种你别正面回 · 转给阿布 · 让阿布去跟她经纪人对 · 你别担在自己手里\n> Vivian: 你做久了就知道 —— **达人是巨婴 · 客户也是巨婴 · 你做久了 · 都是在哄婴儿。**`,
+      choices: [
+        { key: "A", text: "*\"正面 WhatsApp 回 Emma:'12 个月 18W 我先 review 一下 · 我们晚点回'。\"* 自己抗", effects: { 决: -1, 共: 1, 规: -1, 险: 2 }, next: "N04", flag: "emma_self_handle" },
+        { key: "B", text: "*\"Emma 这条转给阿布 · 让阿布跟她经纪人对(听 Vivian 的)。\"*", effects: { 决: 1, 共: 2, 规: 2, 险: -1 }, next: "N04", flag: "emma_escalated_to_am" },
+        { key: "C", text: "*\"Emma 这条转给阿布 + Cc Vivian · 让总监知道这单的复杂性。\"*", effects: { 决: 2, 共: 1, 规: 1 }, next: "N04", flag: "emma_brought_director" },
+        { key: "D", text: "*\"那封 BCC 你的 [Awareness] 邮件 · 你截了 header 那一行 · 但邮件本体没截。\"*", effects: { 决: 2, 险: 3, 规: -2 }, next: "N04", item: "bcc_awareness_header" }
+      ]
+    },
+
+    N04: {
+      chapter: "第五章 · 周四的空位",
+      title: "周四 09:30 · 米拉空位",
+      summary: "周四早 9:30 · 米拉工位真的空了 + Konstantin 仍沉默 + 客户老板今天 17 点要 align KaptainK",
+      task: "Aurora · 已签 4 / 在签 5 / 谈不下 1 (KaptainK) / 没回 2 · 今 EOD 8 个定下来",
+      weight: 3,
+      preludesByFlag: {
+        emma_self_handle: `*Emma 凌晨 1:02 一连发 7 条 WhatsApp · 你 6:45 醒看到。*\n*第 7 条是:"在吗"。*`,
+        emma_escalated_to_am: `*阿布凌晨 0:08 邮件:"Emma 16W 12 月 我搞定了 · 你今天签合同就行 · 我去睡了。"*`,
+        emma_brought_director: `*Vivian 早 8:30 微信:"今天 11:00 茶水间见面聊一下 · Emma 这单不只是 Emma 一个人的事。"*`,
+        bcc_awareness_header: `*你 8:50 进公司 · 邮箱里那封 [Awareness] 还在收件箱顶。*\n*你没删 · 也没标已读 —— 万一系统自动回收呢。*\n*你给那个截图改了名字 · 叫 "wed_1648_bcc"。*`
+      },
+      body: `**9:30**。\n\n你坐下。\n你一秒注意到 —— 米拉工位上的盲盒展示架不见了。\n画了猫脸的马克杯也不见了。\n"周二上线 · KPI 112%"的便利贴 · 撕得只剩半张胶。\n\n工位干净得像没人来过。\n\n——\n\n你打开 Aurora 飞书表 —— 多了一列:\n\n> **\`Last comment: HR · 09:01 · "Mila Chen 已离职"\`**\n\n*HR 自动同步飞书的字段。*\n*"已离职"三个字 · 系统冷冰冰。*\n*Mila 一晚就被处理掉了。*\n\n——\n\n**9:42** · 阿布群消息:\n\n> "@{playerName} @Jasper · 周四盘点:已签 4 / 在签 5 / 谈不下来 1(KaptainK 报价超)/ 没回 2"\n> "今天 EOD 前 8 个定下来。"\n> "另:**Sam 让 Nolan 转一句:'今天 17 点群里 align 一下 KaptainK 那单 · 老板有想法。'**"\n\n*"老板有想法。"*\n*这是国内 agency 跟客户最 nightmare 的一句话之一。*`,
+      choices: [
+        { key: "A", text: "*\"先盘点合同 · 列周四/周五签约时间表 · 17:00 前先备弹药。\"*", effects: { 决: 2, 规: 2, 共: -1, 险: -1 }, next: "N06C", flag: "thursday_battle_plan" },
+        { key: "B", text: "*\"走到 Vivian 工位 · 问米拉的事。\"*", effects: { 决: 1, 共: 3, 规: -1, 险: 1 }, next: "N06C", flag: "asked_vivian_mila", item: "vivian_mila_truth" },
+        { key: "C", text: "*\"去茶水间 · 等 Vivian 11:00 那个聊。\"*", effects: { 决: 2, 共: 3, 规: -1, 险: 1 }, next: "N06C", flag: "vivian_11am_briefing", condition: s => s.flags.has("emma_brought_director") },
+        { key: "D", text: "*\"光标停在飞书表那个'Mila Chen 已离职'字段上 —— 你右键看属性 · 编辑者是 \`seraphine@growmax.io\` · 时间是周三 23:47。\"*", effects: { 决: 1, 险: 3, 共: 1 }, next: "N06C", item: "mila_termination_metadata" }
+      ]
+    },
+
+    N06C: {
+      chapter: "第六章 · 把合同钉死",
+      title: "周四 17:00-19:00 · KaptainK 双重灾难",
+      summary: "周四 17:00 客户砍 KaptainK + 19:00 Konstantin 反扑(双重灾难一节合并)",
+      task: "Aurora · 客户砍 KaptainK + Konstantin 19:09 反扑 · Sam 19:11 直接找你",
+      weight: 4,
+      preludesByFlag: {
+        thursday_battle_plan: `*你 14:00 把所有合同 ETA 列了一张表。* *RourkeHolly 36W mou 14:30 sign · TechSarah/Vina/Bro/Jesse/Molly 全部签完 · 还剩 KaptainK + Korin 备选。*`,
+        asked_vivian_mila: `*Vivian 抬头看你 · 没停打字。*\n*"她不是被裁的。她转正答辩 · '综合评分不达预期'。同期 5 人转正 3 人 · 她那 2 人之一。"*\n*"…… 你信吗?"*\n*你不知道。*`,
+        vivian_11am_briefing: `*Vivian 茶水间 12 分钟。她跟你说了 Emma · 说了 Mila · 说了"哄婴儿"具体怎么哄。*\n*她最后一句是:"你别问太多 · 但你也别假装看不见。"*`,
+        mila_termination_metadata: `*你 11:08 又点开飞书那行字段属性。*\n*\`seraphine@growmax.io · 周三 23:47\` —— 这个时间你今早第一次看的时候没多想。*\n*现在你想了 —— **23:47 是已离职状态被写进系统的时间**。*\n*Mila 周三晚上 11 点多还不知道自己第二天进不来。*`
+      },
+      body: `**17:13**。\n\n你刚跟 Nolan 在群里 align 完 RourkeHolly 36W mou。\n钉钉弹窗:Nolan 发起语音通话 · 标题:"Quick"\n\n你接。背景音是 Sam 的话尾巴 —— 他和 Nolan 在车里。\n\n—— Sam 通过 Nolan 转达:\n\n> Nolan(转 Sam): KaptainK 早上那事我们 sync 完了\n> Nolan(转 Sam): 我们决定不要她了 · 她那个 IG story Reddit 上有人讨论 · 标 #ad 没付钱 · FTC 那边可能 notice\n> Nolan(转 Sam): KaptainK 18W 预算 · NoTechBro 升档 7W → 11W · 剩下 RourkeHolly 加价 25W → 36W 锁死\n\n—— 17:18 · 你低头看了一眼时间。\n—— **2 小时 42 分钟到 EOD。**\n—— 你今天还没跟 Konstantin 说要退单。\n—— 你还没跟 NoTechBro 说要升档。\n—— 你还没跟 RourkeHolly 团队说加 11W。\n\n*你刚把咖啡杯放下。*\n\n——\n\n17:30-19:00 · 你按选择路径处理三件事。\n\n**19:08**。\n你站起身收包。\n\n—— 19:09 · KaptainK 经纪团队(Konstantin)邮件抄群所有人 · official letter:\n\n> "We respectfully disagree with the unilateral termination.\n> The post in question was made under explicit verbal agreement with Aurora's product lead during a Tuesday 11:00 PT call.\n> We have the recording on file.\n> Any further unilateral action may result in counterclaim for tortious interference.\n> Written response expected by Friday 12:00 PT."\n> — Konstantin\n\n*Konstantin 抄了 Nolan + 阿布 + Vivian + 你 + Sam(by Nolan forwarding)。*\n*他声称 Sam 周二 11:00 PT 跟 KaptainK **有过口头授权**。*\n*—— 那天 Sam 有没有跟 KaptainK 通过电话?**只有 Sam 自己知道。***\n\n—— **19:11** · Sam 第一次直接 wechat 你(平时只跟 Nolan):\n\n> Sam: {playerName} 你过来一下 我现在还在公司\n> Sam: 这事变大了\n\n*你包还没背稳。*\n*你刚以为今天可以 7 点走。*`,
+      choices: [
+        { key: "A", text: "*\"去 Sam 办公室 · 把 timeline 当面摆给他 · 让他自己回 Konstantin。\"*", effects: { 决: 3, 共: 1, 规: 1, 险: 1 }, next: "N_THU_NIGHT", flag: "client_face_to_face" },
+        { key: "B", text: "*\"回 Sam:'1 小时到您那边 · 建议您先群里 official 回 Konstantin 一句「团队 review · 周五 12 PT 前正式答复」· 给我们 14 小时 buffer'。\"*", effects: { 决: 2, 共: 0, 规: 3, 险: -1 }, next: "N_THU_NIGHT", flag: "bought_14_hours" },
+        { key: "C", text: "*\"微信阿布:'救命 · KaptainK 反扑 · Sam 叫我过去 · 你今晚还在公司吗 · 我需要你一起去'。\"*", effects: { 决: 1, 共: 3, 规: -1, 险: 1 }, next: "N_THU_NIGHT", flag: "am_called_in" },
+        { key: "D", text: "*\"先去 Vivian 工位 —— 她还在 · 你过去说一句'我需要你 30 秒'。她抬头说'我等你这条很久了'。\"*", effects: { 决: 3, 共: 3, 规: -1, 险: 1 }, next: "N_THU_NIGHT", flag: "director_backed_kill", item: "director_endorsement", condition: s => s.items.has("vivian_quote") },
+        { key: "E", text: "*\"飞书共享盘里有 Aurora 合同的全文 · 你之前没当回事 —— 现在你想起来了。\"* 调出 §4.2 Sole Sourcing 条款 · 截图 + 时间戳 · 让阿布转 Vivian · Vivian 转法务。", effects: { 决: 4, 规: 3, 共: -1, 险: 3 }, next: "N_THU_NIGHT", flag: "contract_clause_quoted", item: "contract_clause_screenshot", condition: s => s.flags.has("escalated_konstantin") || s.items.has("hr_email_screenshot") }
+      ]
+    },
+
+    N_THU_NIGHT: {
+      chapter: "第六章 · 把合同钉死",
+      title: "周四 22:00 · 公司打车回家",
+      summary: "周四晚 · KaptainK 反扑后 · Sam 第一次直接 wechat 你 · 你没吃晚饭",
+      task: "周四夜 · 下班路上 · 你今天没吃晚饭",
+      weight: 2,
+      preludesByFlag: {
+        client_face_to_face: `*你 19:30 进 Sam 办公室 · 把 timeline 一条条摆完。*\n*Sam 看了你 30 秒 · 说:"我没跟 KaptainK 通过电话。Konstantin 在 bluff。"*\n*21:30 出来 · 你才发现自己今天没吃晚饭 · 21:45 打到车。*`,
+        bought_14_hours: `*Sam 19:30 群里 official 回 Konstantin · "团队 review · 周五 12 PT 前正式答复。"*\n*你 20:00 出公司 · 20:30 才打到车(地铁延误 + 高峰打车难)。*\n*你打开邮件草稿三次 · 一个字都没敲。*`,
+        am_called_in: `*阿布 20:00 跟你一起去 Sam 办公室 · 全程他主导 · 你站他后面。*\n*散会阿布拍你肩:"明天我撑你 · 你今晚去吃顿好的。"*\n*你 22:00 打车 · 阿布说他还要开车去接女儿 —— 她已经三天没看到他了。*`,
+        director_backed_kill: `*你发完 Vivian 帮你拟的回 Konstantin 邮件 · 19:30 工位坐着。*\n*Vivian 没回你邮件 · 但你知道她明早 7:30 会做点什么。*\n*你 21:00 才出公司 —— 中间在工位上发了 30 分钟呆 · 21:18 上车。*`,
+        contract_clause_quoted: `*你 19:45 调出 Aurora 合同 PDF · 翻到第 11 页 · §4.2:*\n\n> **§4.2 Sole Sourcing & Communication Protocol**\n> All commercial negotiations, including but not limited to talent fee discussions, contract amendments, and timeline adjustments, **must be channeled exclusively through the designated Agency Account Lead** (in this engagement, Growmax / Bryson Liu). Direct contact with Aurora's product, engineering, or executive personnel by talent representatives, agents, or third parties **constitutes a material breach** of this clause.\n\n*你截图 + 时间戳 · 19:50 发阿布 · 阿布 20:08 转 Vivian。*\n*Vivian 21:30 微信你:"§4.2 引用对的 · 写得也对。但合规走流程 · 周一才能正式发函 · 这周末你别再操心了。"*\n*你"嗯"了一下。*\n*但 21:55 你刷 Reddit r/influencermarketing —— 看到有人贴出一段截图:Konstantin 在某个 talent agency Slack 行业群组里 vent 了一段 · @ 了 5 个同行 · 其中有 KaptainK 的前 manager。*\n*周一 DLW 行业 newsletter 8:00 PT 推送 · 这单大概率会 cover。*\n\n*你 22:00 出公司。22:18 上车。*\n*合同条款是真的 —— 但流程比律师函慢 · 而 Konstantin 通过行业舆论先 weaponize 你。*`
+      },
+      body: `出租车上。\n\n今天的天气你完全没注意到。\n窗外路过 · 都是吃完晚饭出来溜达的人。\n一对情侣走过广场 —— 男的吃糖葫芦 · 女的吃烤红薯。\n\n*你今天没吃晚饭。*\n*Konstantin 那封 official letter · 你打开了 4 次 · 没有一次读完。*\n\n——\n\n你想到米拉。\n**她离开两天了。**\n你都没仔细想过她现在在干嘛。\n她朋友圈这两天没发任何东西 —— 不是没发 · 是看不到。\n\n——\n\n到家。\n冰箱里只有矿泉水。你喝了两瓶。\n*"明天 EOD 把三件事都干完 · 然后周末睡两天。"*\n*"……我可能睡不着。"*\n\n——\n\n你躺床上。\n你定了周五早 7:30 闹钟。\n你打开手机 · 翻了一下相册的 awareness 文件夹。\n然后锁屏。\n\n*"你过来一下 · 这事变大了。"*\n*Sam 那条微信你已经看过 7 遍。*\n\n*你没睡着。*`,
+      choices: [
+        { key: "A", text: "关灯 · 盯天花板。", effects: { 险: 1 }, next: "N07" },
+        { key: "B", text: "开台灯 · 不睡 · 等天蒙蒙亮。", effects: { 险: 1 }, next: "N07", flag: "all_nighter" }
+      ]
+    },
+
+    N07: {
+      chapter: "第七章 · 周五的截稿日",
+      title: "周五 11:00 · 凌晨 brief + Emma 脚本 + EOD 三件事",
+      summary: "周五 11:00 · Sam 凌晨 3:11 用 Cursor 重写 brief v5 + Emma 第一版脚本 sample + RourkeHolly 终签",
+      task: "Aurora EOD 三件事 · v5 brief / KaptainK 答复 / RourkeHolly 36W 终签",
+      weight: 4,
+      preludesByFlag: {
+        client_face_to_face: `*周五早 8:00 · Sam 群里跟一句:"昨晚 timeline 我看了 · 这事到此为止 · KaptainK 不要 · Konstantin 让 Nolan 周五 12 PT 答复。"*\n*你松了一口气 · 但你知道 Sam 还没说"这事我兜"四个字。*`,
+        bought_14_hours: `*周五早 8:30 · 你检查邮件草稿仍是空白。*\n*Sam 9:00 群里:"@{playerName} 答复 Konstantin 的邮件 · 你今天 EOD 前给我看一版 · 我签字。"*\n*你又是替死鬼。*`,
+        am_called_in: `*阿布周五早 8:30 私聊:"昨晚谢谢 · 今天我撑你 · 三件事并行你别怕。"*\n*你回了一个 emoji · 没多说。*\n*阿布 8:50 才进公司 —— 比平时晚 50 分钟。*`,
+        director_backed_kill: `*Vivian 周五早 7:30 已经主动 escalate 给 Aurora 客户老板的老板。*\n*你不知道这是不是 favor · 但她做了 · 而且没跟你说。*\n*8:45 你看到群里 Sam 一句:"KaptainK 这单 Vivian 已经跟我老板那边对过了 · 退单的事不用我们再操心。"*`,
+        contract_clause_quoted: `*周五早 6:50 · Vivian 微信你截图 —— 她把 §4.2 + 你的截图打包发给了 Aurora 客户法务总监 · 抄送 Sam。*\n*7:08 客户法务总监回:"Got it. Will brief Sam at 9:30 PT today."*\n\n*8:00 Konstantin 回了一封 official letter cc 群所有人 —— 措辞从昨晚的 "respectfully disagree" 变成 "open to dialogue · let's schedule a call"。*\n*但 8:15 你刷 Twitter / X · 看到一个营销圈大 V(@DLW_Briefing)发了一条:*\n\n> "Hearing chatter about a brand X cancelling a tier-2 talent over FTC concerns + a subsequent contract breach claim. Will dig more next week."\n\n*没有点名 · 但圈子里能 decode 这是 Aurora。*\n*周末舆论会发酵 · 但你这一拳打到了实处。*`,
+        all_nighter: `*你 5:40 看到窗帘缝透进第一束光。*\n*你没睡。整夜。*\n*6:00 爬起来洗冷水脸 · 镜子里的你眼袋比昨天深了一层。*\n*7:15 出门 —— 比平时早 1 小时 · 因为反正也没睡。*`
+      },
+      body: `**周五 09:00**。\n\n你 8:45 进公司 · 比平时早 15 分钟 · 因为昨晚没睡好。\n\n—— 凌晨 3:11 · Aurora 项目群 · Nolan 转发 Sam 的语音 + 截图:\n\n> Nolan: 各位 sorry · Sam 凌晨 3 点用 **Cursor** 自己重写了 brief 终版 · 我刚醒看到 · 直接 paste 飞书表 v5\n> Nolan: brief 12 页 · 比 v4 多 8 页\n> Nolan: Sam 补一句:"AI Skills 模式部分我让 **Claude** 帮我写了 talking points · 大家照着用就行"\n> Nolan: ……我也是醒了才看到 · 你们看着办\n\n*Sam 凌晨 3 点。*\n*用 Cursor 写 brief 终版。*\n*让 Claude 写 talking points。*\n*"大家照着用就行。"*\n\n——\n\nEmma 09:30 邮件:\n\n> "{playerName} 早 · 脚本 v1 9 点之前给到了 · 飞书发你了\n> 我用 **Sora 2** 做了一个视觉草稿 · 1分钟 · 你看下感觉对不对\n> 但我想说 · Sam v5 brief 那 12 页我没读完 · 我刚做完瑜伽 · 你 highlight 一下重点行不"\n\n——\n\n**10:00**。\n\n你打开 Emma 脚本草稿:\n—— 1 分钟视觉:她在厨房 · 用客户产品 agent 模式 · 让 Skills 模式找菜谱 · 做出来一桌赛博菜。\n—— Sora 2 生成视觉 · 比真人拍快 100 倍 · 但脸有点不像 Emma 自己。\n—— 配音她自己录的 · 真人。\n\n——\n\n**10:30** · 阿布群里:\n\n> 阿布: @{playerName} · 这周 Aurora 收尾在你手上 · v5 brief + Emma 脚本 + Konstantin 答复 · 三件事 EOD:\n> 阿布: 1. v5 brief Emma 已 align(确认改不改)\n> 阿布: 2. KaptainK 退单 official 答复 Konstantin\n> 阿布: 3. RourkeHolly 36W 终版合同 ready to sign\n> 阿布: 三件事 · EOD · 谢谢两位老师\n\n(Jasper 周四下午请了半天年假 · 周五早 9:30 才进公司。)\n\n—— **10:55** · Nolan 私聊你:\n\n> Nolan: 老板凌晨 8 点又给我打电话说 'AI Skills 模式那段我再改一下吧'\n> Nolan: 我跟他说不行了\n> Nolan: 他说"好那就这版 · 但下周再 iterate"\n> Nolan: ……所以这版 lock\n\n*"finalized · 但下周再 iterate"。*\n*Nolan 跟你一样 victim。*`,
+      choices: [
+        { key: "A", text: "*\"把 v5 brief highlight + 邮件 Emma:'三蟹 + Skills · 别带任何 client logo · 你 14:00 前如果改不动就这版过 · 我顶'。\"*", effects: { 决: 3, 共: 2, 规: 1, 险: -1 }, next: "N08", flag: "emma_script_locked" },
+        { key: "B", text: "*\"v5 brief 直接邮件转 Emma:'你看一遍 · 不对我们 14:00 邮件对一下'。\"* —— 然后改 3 个回合", effects: { 决: -1, 共: 1, 规: 2, 险: 1 }, next: "N08", flag: "emma_script_drift" },
+        { key: "C", text: "*\"微信阿布:'三件事我并行 · KaptainK 那边我建议您和 Vivian 一起拍板 · 我那边 hold'。\"*", effects: { 决: 2, 共: 1, 规: 2 }, next: "N08", flag: "kaptaink_to_director" },
+        { key: "D", text: "*\"打开 v5 brief 飞书 · 翻到 12 页底 · 你看到水印:\`Powered by PM-14 Engagement Engine · v5.04.17\`。\"*", effects: { 决: 1, 险: 3, 规: -1 }, next: "N08", item: "brief_engine_watermark", condition: s => s.items.has("hr_email_screenshot") }
+      ]
+    },
+
+    N08: {
+      chapter: "第七章 · 周五的截稿日",
+      title: "周五 15:00 · Mirror 数据表",
+      summary: "周五下午 · 你去打印间路过 4 楼会议室 · 半开门 · 桌上 Mirror 数据表",
+      task: "Aurora 周五 15:00 · 三件事推进中 · 路过 4 楼会议室",
+      weight: 5,
+      preludesByFlag: {
+        emma_script_locked: `*Emma 14:30 邮件回:"v2 我按你说的改完了 · 客户产品 logo 我藏成虚化背景 · 你看不行我再改。"*\n*你看了 · 行。*`,
+        emma_script_drift: `*Emma 14:00 改 / 14:30 改 / 14:50 改。*\n*v4 终于过 · 客户产品下午 5 点才 confirm。*`,
+        brief_engine_watermark: `*那个水印你又翻出来看了。*\n*"PM-14 Engagement Engine · v5.04.17"。*\n*"PM-14"这个字符串这周第几次出现你已经数不清 —— OA / 数据表水印 / brief 水印 · 它在不同地方反复出现 · 像在等你识别它。*`
+      },
+      body: `**14:55**。\n\nEmma 脚本 v2 14:45 confirmed。\nRourkeHolly 36W 合同 14:30 sign。\nKonstantin 那边 …… 北京 03:00(美西 12:00 PT)是周末 · 还在 hold。\n\n—— 你去打印间拿 Emma 合同的 hard copy。\n\n打印间。Jasper 站在打印机旁 · 抽出一摞 A4。\n你瞄了一眼最上面那张 —— **\`Q3 个人 OKR · KR3:适应力提升路径(Adaptability Uplift)\`**。\n\nJasper 跟你点头:"哦 · 你也来打东西啊。"\n他没解释。他端起咖啡走了。\n\n*"适应力提升路径"。*\n*这个词你在哪见过 —— 哦 · 周三早 OA 弹窗里好像也有过。*\n*你没多想。*\n*这个表 · 公司每个人 Q3 都要写 —— 连 Jasper 都写。*\n*没人多问一句 · 也没人停一下。*\n\n——\n\n你打印完 Emma 合同。\n出打印间 · 路过 4 楼小会议室 —— 门半开。\n桌上摊着一张 A3 数据表。\n表头:**\`Mirror Project · Cohort 14 · Behavioral Index\`**\n副标:\`PM-14 · WK17\`\n\n——\n\n你脚步停了 0.3 秒。\n\n—— 数据表 23 行 · 6 列。\n列名:**Name · Compliance · Resilience · Network · Decision-Making · Adaptability**\n\n第 11 行:\n\n> 11 · {playerName} · 0.71 · 0.42 · 0.58 · 0.55 · 0.49\n\n*你的名字。*\n*你的 N02A 问卷转化成的数字。*\n\n第 12 行:\n\n> 12 · Mila Chen · 0.31 · 0.18 · 0.34 · 0.22 · 0.71\n\n*Mila 的数字。*\n*她离职了 · 数字还在表上。*\n*Adaptability 0.71 —— 比你高 0.22 · 全表第二高。*\n*她很会点头。然而没用。*\n\n——\n\n表的最下方 · 字号小一号 · 是一段 \`Note · Index Definitions · Internal · Cohort Personnel use only\`:\n\n> **Compliance** · 项目群消息已读速度(<3min = green · 3-10min = amber · >10min = red)\n> **Resilience** · 20:00 后在线时长占比(本周 / 滚动 4 周加权)\n> **Network** · 团建 / 年会 / 部门聚餐到场率(全员 90 天滚动)\n> **Decision-Making** · 周报 / OKR 复盘按时提交率(连迟 2 周触发预警)\n> **Adaptability** · 直属上级讲话时点头次数 / 句(由会议室 1080p 摄像头逐句采样)\n\n*你看了一遍。*\n*再看了一遍。*\n*Compliance 0.71 = 你微信 3 分钟内已读。*\n*Resilience 0.42 = 你晚 8 点之后没那么常在线。*\n*Network 0.58 = 上次部门聚餐你去了一半就走。*\n*Decision-Making 0.55 = OKR 复盘你拖过两次。*\n*Adaptability 0.49 = 阿布讲话时你点头不够。*\n\n*合起来翻译过来 ——*\n*你这种打工人 · 在 PM-14 眼里就是一组 5 位的小数。*\n\n——\n\n你听到电梯叮一声。\n脚步声往这边来。`,
+      choices: [
+        { key: "A", text: "*\"立刻退会议室 · 假装路过 · 别让任何人看到。\"*", effects: { 决: -1, 共: -1, 规: 3, 险: -1 }, next: "ENDING_GATE", flag: "mirror_walked_away" },
+        { key: "B", text: "*\"拍一张全表 · 退出。\"*", effects: { 决: 3, 共: 1, 规: -3, 险: 4 }, next: "ENDING_GATE", flag: "mirror_photographed", item: "mirror_screenshot" },
+        { key: "C", text: "*\"拍全表 + Mila 那行特写。\"*", effects: { 决: 4, 共: 3, 规: -4, 险: 5 }, next: "ENDING_GATE", flag: "mirror_mila_photographed", item: "mila_data_row" },
+        { key: "D", text: "*\"原地等 · 看进来的是谁。\"*", effects: { 决: 5, 共: 2, 规: -5, 险: 6 }, next: "ENDING_GATE", flag: "mirror_confronted_gordon", item: "gordon_confront", condition: s => s.items.has("hr_email_screenshot") }
+      ]
+    },
+
+    ENDING_GATE: {
+      chapter: "第八章 · 周五 EOD",
+      title: "18:00 · EOD",
+      summary: "周五 EOD · Aurora 收尾 · 你的一周维度判定结局",
+      task: "周五 EOD · 系统判定中",
+      weight: 5,
+      body: `**18:00**。\n\nAurora 项目群 · 阿布发了一段总结:\n\n> 阿布: 各位收尾 · 周五 EOD 现状:\n> 阿布: 已签 8 / 处理中 1 (KaptainK Konstantin counter 周末解决) / 备选 2 下周补\n> 阿布: brief: v5 finalized · 客户老板下周 iterate\n> 阿布: 脚本 sample: EmmaPet v2 confirmed · JesseFun 自由发挥版周一给(他坚持周末不工作)\n> 阿布: 周五目标:全员定完 · 1-2 个 sample · 都达到了。\n> 阿布: 谢谢两位老师 · 周末好\n\n*"两位老师"。*\n*Mila 不在这个"两位"里 · 她周二就出局了。*\n*"两位"= 你 + Jasper。*\n\n——\n\n你看着这条总结 · 没立刻回。\n你打开飞书 · 把所有合同状态 review 了一遍。\n\n—— Aurora 第一阶段收尾。\n—— 但你心里很清楚:v5 brief 下周还要 iterate · RourkeHolly 36W mou 不是真合同 · Konstantin 周末必爆 · Emma 脚本只是 sample · 备选 2 人下周补谁补?\n\n——\n\n阿布 18:23 私聊:\n\n> "辛苦 · 周末好好歇 · 周一见。"\n\nVivian 18:25 不点你 · 但发了一句 channel 消息:\n\n> "Friday EOD · everyone go home."\n\n*她这句话像是给所有人 · 但你知道她看见你了。*\n\n——\n\n你的相册里有几张照片。\n你听见过几句不该听见的话。\n你撞见过几个不该撞见的人。\n\n——\n\n*系统判定中 ……*`,
+      choices: [
+        { key: "A", text: "*\"收拾东西 · 走人。\"*", effects: {}, next: s => {
+          const aw = awarenessCount();
+          if (aw >= 4) return "E_PM14";
+          const letters = computeLetters(s.stats);
+          // 决高共中规高险低 = A 上岸
+          if (s.stats.决 >= 8 && s.stats.规 >= 6 && s.stats.险 <= 4) return "E_NORMAL";
+          // 决高共低规中险高 = B 执剑人
+          if (s.stats.决 >= 8 && s.stats.共 <= 3 && s.stats.险 >= 6) return "E_BLADE";
+          // 决中共高规中险中 = C Plan B 在身
+          if (s.stats.共 >= 7 && s.stats.决 >= 4) return "E_PLANB";
+          // 默认 D 装糊涂大师
+          return "E_NUMB";
+        } }
+      ]
+    }
+
+  },
+
+  endings: {
+    E_NORMAL: {
+      label: "E_NORMAL · 上岸者",
+      title: "上岸者",
+      body: `**周一 09:59**。
+
+你又挤进了那部电梯。
+
+镜子里的你脸色比上周好。
+咖啡是星巴克 grande · 拿铁少冰。
+昨天下班时 Sam 在群里给你发了一句"good job · Aurora 干得不错"。
+Vivian 早上 9:30 让你接一个新的 lead —— 客户名叫 Halcyon · 比 Aurora 大 3 倍。
+**36 个月你可能升 director。**
+
+——
+
+阿布 9:50 群里 @ 你:"@{playerName} 周末好 · Halcyon 那个 lead 我给你 brief 一下哈 · 咱仨周二上午 10 点对一下。"
+*"咱仨"。* —— *阿布 + 你 + Jasper · 跟 Aurora 一模一样。这周不一样的项目 · 同一个三角。*
+
+Jasper 10:05 进公司。
+他停在咖啡机旁 · 还是黑咖 · 看你一眼 · 点了下头。
+没说话。
+*该走还走 · Jasper 这种人不会因为一周改变。*
+
+——
+
+你周末走过小区便利店 · 多买了一根香肠 · 一边走一边咬。
+**米拉**工位空照那张照片你没删。
+也没翻。
+
+*你不确定上岸的路是不是经过她。*`,
+      totalAccount: "你升上去了。下周一 09:59 你还会挤进那个电梯 —— 但拿铁可以报销了 · Halcyon 比 Aurora 大 3 倍。米拉那张工位照还在你相册里。",
+      bossView: null
+    },
+
+    E_BLADE: {
+      label: "E_BLADE · 执剑人",
+      title: "执剑人",
+      body: `**周日 23:40**。
+
+你刚刷完一集美剧 · 手机弹一条微信 ——
+
+> Sam: {playerName} 你明天到公司先来找我
+> Sam: Halcyon 项目 我需要你 lead
+> Sam: 跟阿布说一声就行
+
+*这是 Sam 第二次直接发你 —— 第一次是周四晚 KaptainK 反扑那天。*
+*你把这条消息截了图 · 没回。*
+*你不知道这是升职 · 还是套牢。*
+
+——
+
+**周一 09:59**。
+
+你挤进电梯。
+
+镜子里的你脸色没变。
+你这一周不仅扛下了 Aurora · 你还**主动** weaponize 了客户内部信息 —— brief 漏洞 / Konstantin 邮件 / Mirror 数据表片段。
+
+—— Sam 周一一早 wechat 你:"以后这类突发事件 · 你帮我撑着。"
+—— Konstantin 团队周末把你列入"危险对接人"白名单。
+—— RourkeHolly 经纪团队的 contact 主动把你拉进她的 inner circle。
+
+——
+
+阿布周一 1:1 · 没坐 meeting room · 直接拉你去公司楼下抽根烟:
+
+> "{playerName} · 你最近 …… 太利了。"
+> "利得让人不太敢接近。"
+
+——
+
+Jasper 周一刷工位前没停 —— 上周他还经常凑过来"借个 Upfluence 账号" · 这周一句没说。
+*他觉得你不上道了。*
+
+——
+
+Vivian 没找你。
+但你晚上刷 Lark 内部 Channel 时看到 —— 她周日 23:18 给你那封"Konstantin 邮件 review"邮件点了一个 ❤。
+*她不会下场 · 但她看在眼里。*
+
+——
+
+*你周末 Netflix 看了一部美剧 · 主角全程 deadpan。*
+*你笑了三次。*
+*你不知道阿布这是赞还是警告。*`,
+      totalAccount: "你这一周从 KOL 运营变成了一把刀。客户怕你 · 经纪人记你 · 阿布跟你抽烟 · 然后跟你说'太利了'。你不知道这条路你还能走多久。",
+      bossView: null
+    },
+
+    E_PLANB: {
+      label: "E_PLANB · Plan B 在身",
+      title: "Plan B 在身",
+      body: `**周日晚上 23:47**。
+
+你周五晚把这周积下的零碎 —— Vivian 的金句 / Gordon 的暗示 / 飞书表那行字段元数据 —— 整理成了一个文档。
+不在公司云。
+不在外置硬盘。
+是一个加密笔记 app · 密码只有你知道。
+
+你给文档命名时打了一半 · 删了。
+最后保存成 **"未命名"**。
+
+——
+
+**周一 09:59**。
+
+你挤进电梯。
+镜子里的你看起来一模一样。
+但**你已经不是上周那个你了。**
+
+——
+
+阿布周一 1:1 看你两秒:"你最近 …… 没事吧?"
+你笑了一下:"没事。"
+*他没追问。* —— *阿布永远不会追问 · 因为他自己也在悬着。*
+
+Jasper 路过你工位 · 笑了一下:"你周末做了什么大事啊 · 看着挺神秘。"
+*你心里咯噔一下 —— 他什么都不知道 · 但他什么都感觉得到。*
+
+Vivian 没找你。
+她也没在内部 Channel 给你点任何赞。
+*你做得很安静。*
+*她没看到 · 这是好事。*
+
+——
+
+*你不知道这份文档以后会做什么。*
+*你不知道下一次客户老板用 Cursor 凌晨改 brief 的时候 · 你的反应会和上周一样吗。*
+*但你知道 · "未命名"那份文档存在 · 你就还有 Plan B。*`,
+      totalAccount: "你这一周该交活儿交活儿 · 该签合同签合同。但你也存了一份「未命名」。你还没决定怎么用 —— 但你已经不再是上周那个能完全相信公司的你了。",
+      bossView: null
+    },
+
+    E_NUMB: {
+      label: "E_NUMB · 装糊涂大师",
+      title: "装糊涂大师",
+      body: `**周一 09:59**。
+
+你又挤进了那部电梯。
+
+Sam 觉得你"听话"。
+阿布觉得你"省心"。
+Vivian 周五没正眼看过你。
+
+周一你接到的新 lead —— 是 **Emma 续约**。
+"你最稳。"
+
+*Emma 12 个月 18W 这单 · 你接下来 12 个月每天都要面对她。*
+
+——
+
+阿布 9:50 私聊一句:"周末好 · 多睡两觉哈。"
+*他看出来你累了 · 但他没给你 buffer · 他也给不了。* —— *他周日还在改 Halcyon 那个 lead 的提案 · 你都知道。*
+
+Jasper 上午 10:30 拍你肩:
+> "我手上有个小 KOL 续约我搞不来 · 你下午能不能 cover 一下 · 我去客户那边开会。"
+*"开会" —— Jasper 周一下午是去客户那边 · 还是去面试 · 你也分不清了。*
+*但你接了。*
+*因为"你最稳"。*
+
+——
+
+你周末 Netflix 看了一部叫 *Severance* 的美剧 · 一晚上。
+你提前半小时睡 · 因为周一要早起。
+
+——
+
+*你也没多想。*
+*想多了 · 也没用。*`,
+      totalAccount: "你这一周该选 A 选了 A · 该回避 D 回避了 D。所有人都觉得你「省心」。代价是周一你接到 Emma 续约 · 因为「你最稳」。这条路最长 —— 也最不让人记得。",
+      bossView: null
+    },
+
+    E_PM14: {
+      label: "E_PM14 · 未命名",
+      title: "未命名 - 1",
+      body: `**周五 23:47**。
+
+你回家。打开手机相册 · 翻 awareness 文件夹。
+照片不多 —— 大半线索是你**听到的、错收的、看见但没拍的**。
+但每一条你都记得在哪个时刻。
+
+——
+
+你打开外卖 · 扫码点了一份煎饼。
+摊主问"加蛋吗"。
+你说"加两个"。
+
+——
+
+你回到家。
+打开电脑。
+新建一个文件夹。
+
+光标停在重命名上。
+你打了几个字 · 又删了。
+
+最后保存成 **"未命名 - 1"**。
+
+你把所有觉察相关的截图 / 邮件 header / 飞书字段元数据 / Vivian 的那句话(你只在心里记着) / Gordon 那 5 秒沉默(你也没法存)
+能拖的拖进去。
+不能拖的 · 你写在备忘录最上面一行。
+
+——
+
+**周一八点闹钟。**
+**你定了。**
+**你睡了。**
+
+——
+
+*你不知道周一你会不会打开"未命名 - 1"。*
+*也不知道你打开它的时候 · 会做什么。*`,
+      totalAccount: "你这一周看见了一些东西 · 但你没行动。你只是把它们存在了一个叫「未命名 - 1」的文件夹里 · 设了闹钟 · 睡了。明天 · 你还是要去那个电梯。",
+      bossView: null
+    }
+
+  }
+};
+
+// ============================================================
+// 16 型人格表(M1 只填路径①可能命中的型,其他兜底)
+// ============================================================
+// 16 型人格:职场英文 3 字缩写 + 冷读术式描写
+// 4 维字母 → 缩写(D决/H等 · E共/C冷 · R规/B叛 · V险/S保)
+const PERSONALITY = {
+  DERS: {
+    title: "PPT 型 · PPT 政治家",
+    mentalState: "别人以为你在认真记笔记,其实你在偷偷改第 7 版升职答辩稿。你从不拒绝开会,因为**会议室就是你的主场**。一页数据,你能讲出三页的气氛。",
+    goodAt: "向上管理 · 跨部门斡旋 · 把\u201c我做的\u201d讲成\u201c我们战略性推进的\u201d",
+    badAt: "需要真的动手干活的瞬间。一旦 hands-on,你的 PPT 天赋就帮不上忙了",
+    bestPartner: "SOP 型 · 工具人之神(你说他做,天衣无缝)",
+    nemesis: "BUG 型 · 不可预测型(对方不按套路出牌,你的话术库整个失效)",
+    bossView: "此人稳。迟早要用。"
+  },
+  DERV: {
+    title: "MVP 型 · 救火队长",
+    mentalState: "别人以为你是卷王,其实你只是**没法忍受事情在自己眼前搞砸**。每当项目快崩的瞬间,你会本能地接过方向盘 —— 哪怕没人让你接。",
+    goodAt: "谈判 · 救火 · 把 DDL 前 2 小时的稿子变成 live",
+    badAt: "下班。别人下班你还在,别人休假你还在,别人离职了你…还在",
+    bestPartner: "AFK 型 · 摸鱼之王(他负责平稳,你负责救场 —— 绝配)",
+    nemesis: "SOP 型 · 工具人之神(对方按流程走,你按流程救不了火)",
+    bossView: "此人不可或缺 —— 但也不可以升得太快,否则没人替我顶了。"
+  },
+  DEBS: {
+    title: "FYI 型 · 抄送大户",
+    mentalState: "你收件箱里的每封邮件,必有一条带「For your awareness」的抄送。你不吵架,你只是**把对方做错的事,抄送给他的上级**。你的留痕可以直接当法庭证据。",
+    goodAt: "留痕 · 阴阳 · 在关键时刻让别人替你背锅",
+    badAt: "面对面正面冲突。一旦撕破脸,你发现 FYI 不是武器",
+    bestPartner: "HR 型 · 办公室和事佬(她对外灭火,你在背后留证据)",
+    nemesis: "CEO 型 · 黑化合伙人(对方不在乎记录,只看谁还站在最后)",
+    bossView: "此人心思深。用他,也防他。"
+  },
+  DEBV: {
+    title: "OKR 型 · 体制外推进者",
+    mentalState: "你心里永远有一张**自己的 OKR**,比公司给你的那份狠三倍。你常常绕过上级直接推事情,因为**等审批的时间够你把项目做完了**。",
+    goodAt: "从 0 到 1 · 自己搭团队 · 自己拉资源 · 自己背锅",
+    badAt: "被管。领导只要一句\u201c这事你等一下\u201d,你整个人就熄火",
+    bestPartner: "MVP 型 · 救火队长(你负责放火开战场,他负责收尾)",
+    nemesis: "PPT 型 · PPT 政治家(对方靠流程,你绕流程,两个操作系统互掐)",
+    bossView: "此人有野心。**迟早自立门户**。"
+  },
+  DCRS: {
+    title: "SOP 型 · 工具人之神",
+    mentalState: "你不是没有情绪,你只是**把情绪从工作中工程化地切除了**。同事在撕架你在归档邮件,客户在咆哮你在对工时。你的 title 没上去,但没有你,公司会停摆。",
+    goodAt: "执行 · 复盘 · 那些别人懒得读完的 OA 附件",
+    badAt: "需要一点创造力的瞬间 —— 你会突然很慌",
+    bestPartner: "MVP 型 · 救火队长(他把不可能变成可能,你把可能的记录下来)",
+    nemesis: "BUG 型 · 不可预测型(你的流程在他面前一文不值)",
+    bossView: "此人不可或缺。"
+  },
+  DCRV: {
+    title: "ROI 型 · 冷面计算器",
+    mentalState: "你对一个项目的第一反应不是\u201c我要做\u201d,而是\u201c**我投进去的每一分钟,能不能换来对我有用的东西**\u201d。你不是冷血,你只是**清醒地把自己当成一家公司在经营**。",
+    goodAt: "砍需求。对所有\u201c顺便帮我\u201d的请求,秒变透明人",
+    badAt: "团队温度。你算得越清楚,别人离你越远",
+    bestPartner: "KPI 型 · 指标狙击手(你们聊天只需要 Excel)",
+    nemesis: "EMO 型 · 破防工程师(对方因为一个表情崩溃,你一整天都在 debug 他的情绪)",
+    bossView: "此人精明。不会吃亏 —— 也包括公司的亏。"
+  },
+  DCBS: {
+    title: "KPI 型 · 指标狙击手",
+    mentalState: "你的信仰只有一个 —— **这个月的数字要亮**。为了数字你可以让同事加班、让供应商延款、让自己失眠;但让你拍板一个没有 precedent 的方案,你会立刻缩回流程里。",
+    goodAt: "数据洗得漂亮 · 汇报节奏精准 · 从不暴露短板",
+    badAt: "看三个月以上的事。你的视野从来超不过下一次 review",
+    bestPartner: "ROI 型 · 冷面计算器(你们的对话不带一个形容词)",
+    nemesis: "WFH 型 · 精神远程(对方不在乎你的数字 —— 这让你无比愤怒)",
+    bossView: "此人能打。但只能打短线。"
+  },
+  DCBV: {
+    title: "CEO 型 · 黑化合伙人",
+    mentalState: "你对同事保持礼貌,对上级保持微笑,对老板保持恭敬 —— 因为**你早就在心里把他的椅子量好尺寸了**。你不是坏人,你只是**认为他那个位置,你坐会坐得更好**。",
+    goodAt: "识别权力结构 · 经营关键关系 · 关键时刻补刀",
+    badAt: "长期合作。盟友到一定时候都要被重新评估",
+    bestPartner: "SOP 型 · 工具人之神(他不会挡你的路,只会擦你的血)",
+    nemesis: "HR 型 · 办公室和事佬(对方把你暴力合谋的计划,稀释成了饭局)",
+    bossView: "此人要盯紧。也许可以合作,也许要先下手。"
+  },
+  HERS: {
+    title: "HR 型 · 办公室和事佬",
+    mentalState: "别人眼里你是老好人,其实你只是**没有选边站的能量**。每次冲突,你的第一反应不是\u201c谁对\u201d,而是\u201c**怎么让这件事不要闹到我身上**\u201d。",
+    goodAt: "调解 · 控场 · 让气氛不难堪",
+    badAt: "被要求表态。一到站队环节,你就去倒咖啡",
+    bestPartner: "MVP 型 · 救火队长(他打仗,你负责事后给所有人包扎)",
+    nemesis: "CEO 型 · 黑化合伙人(对方要的是结果,你给的是饭局)",
+    bossView: "此人可惜。业务没长,脾气倒长。"
+  },
+  HERV: {
+    title: "BFF 型 · 善良的墙头草",
+    mentalState: "你对每一个对你好的人都掏心掏肺 —— **直到下一个人对你更好**。你不是虚伪,你只是**情感带宽太大,每次都被最近一个打动**。下周你会回来,继续被下一个打动。",
+    goodAt: "团队润滑 · 新同事引导 · 生日会氛围担当",
+    badAt: "站队。你的立场和你今天早上和谁一起吃饭高度相关",
+    bestPartner: "OKR 型 · 体制外推进者(他给你方向,你给他温度)",
+    nemesis: "KPI 型 · 指标狙击手(对方从不对你展现情绪,你无从下手)",
+    bossView: "此人可爱。但不敢用在关键位置。"
+  },
+  HEBS: {
+    title: "EMO 型 · 破防工程师",
+    mentalState: "客户的一句话,你会在脑子里反复播放 14 遍。同事在群里发了个句号,你会思考他是不是对你有意见。你的朋友圈,在周三晚 23:47 发出,配图黑白滤镜,文字是两个句号。",
+    goodAt: "共情 KOL、共情用户、共情一切 —— 除了你自己",
+    badAt: "任何公开冲突。你宁愿自己熬夜改 v17,也不愿意让客户失望",
+    bestPartner: "SOP 型 · 工具人之神(他的冷静是你的止痛药)",
+    nemesis: "CEO 型 · 黑化合伙人(对方的冷血让你 3 个月回不过神)",
+    bossView: "此人心太软。用在内部可以,别让她接客户电话。"
+  },
+  HEBV: {
+    title: "WFH 型 · 精神远程",
+    mentalState: "你肉体在工位,但灵魂已经签了一份**永不回归的远程协议**。你对公司的规则不排斥,但也从不遵守 —— 你只是**活在一个比这里更理想的、平行版本的职场里**。",
+    goodAt: "创意 · 脑洞 · 那些\u201c老板要是看见一定很开心\u201d的主意",
+    badAt: "被拉进会议。你的 MBTI 直接把你的状态调成 offline",
+    bestPartner: "EMO 型 · 破防工程师(你们的对话不需要议程)",
+    nemesis: "SOP 型 · 工具人之神(对方的流程每一页都在谋杀你)",
+    bossView: "此人不错。但不知道放在哪。"
+  },
+  HCRS: {
+    title: "NPC 型 · 优质 NPC",
+    mentalState: "你对工作没有野心,对同事没有敌意,对公司没有感情。你 9:00 到岗,18:00 下班,中间 9 小时,**你就是公司最稳定的那盆绿萝**。但不要低估你 —— 你比那些卷王,活得长十倍。",
+    goodAt: "长期重复执行 · 稳定输出 · 绝不惹事",
+    badAt: "创新 · 变化 · 新老板上任",
+    bestPartner: "PPT 型 · PPT 政治家(他用你的稳定包装他的升职路径)",
+    nemesis: "MVP 型 · 救火队长(对方的节奏会把你的植物神经打乱)",
+    bossView: "此人在就行。不升也不降。"
+  },
+  HCRV: {
+    title: "OT 型 · 加班续命党",
+    mentalState: "你从不主动接活,也从不主动拒绝。你的策略是**用时间换安全感** —— 只要我比别人在办公室多两个小时,我就还在这家公司有位置。你可能没有最亮眼的产出,但**你的名字出现在最多的打卡记录上**。",
+    goodAt: "应对突发加班 · 兜底那些没人接的工单",
+    badAt: "汇报价值。你的贡献发生在凌晨,老板看不到",
+    bestPartner: "PPT 型 · PPT 政治家(他帮你把凌晨的 commit 包装成战略)",
+    nemesis: "ROI 型 · 冷面计算器(对方一眼看出你的加班换不来增长)",
+    bossView: "此人肯干。但好像没长出什么东西。"
+  },
+  HCBS: {
+    title: "AFK 型 · 摸鱼之王",
+    mentalState: "你是整个公司**最不可动摇的平衡点**。你不内卷,不躺平,不跳槽,不请假。你下午 3 点准时去买咖啡,5:58 准时合上笔记本。你不是没有梦想,**你的梦想是下班**。",
+    goodAt: "在老板看你的那 3 秒,让屏幕看起来非常忙",
+    badAt: "突发加班。你的生理时钟到点就罢工",
+    bestPartner: "MVP 型 · 救火队长(他救的每一场火,都需要你平稳的背景存在感衬托)",
+    nemesis: "OKR 型 · 体制外推进者(对方对你时间的要求,触发你本能抵抗)",
+    bossView: "此人…没什么问题。也没什么突出。"
+  },
+  HCBV: {
+    title: "BUG 型 · 不可预测型",
+    mentalState: "没人知道你下一步要做什么,包括你自己。你可以上午承诺下午的事,转头去给另一件完全无关的事熬夜;你可以对一个你恨得要死的客户,突然表现得非常温柔。**你不是在搞事,你只是活得很即兴**。",
+    goodAt: "打破僵局 · 反套路 · 让会议从无聊变成事故",
+    badAt: "被依赖。每一个依赖你的同事,最终都要学会准备 plan B",
+    bestPartner: "WFH 型 · 精神远程(你们都在自己的频道上)",
+    nemesis: "SOP 型 · 工具人之神(对方每一次都会因你翻车)",
+    bossView: "此人…算了。下一个。"
+  },
+  _DEFAULT: {
+    title: "未定型 · 还在加载中",
+    mentalState: "像一个还没加载完的网页 —— 你还没决定自己是 SOP 还是 BUG,是 MVP 还是 AFK。入职 3 个月的你,每一次选择都在写入这份档案。",
+    goodAt: "观望 · 学习 · 不得罪人",
+    badAt: "下定决心 —— 关于职业、关于离职、关于今晚要不要改那版稿",
+    bestPartner: "任何一个愿意先开口的人",
+    nemesis: "镜子(无论是电梯里的那面,还是 Mirror 里的那份)",
+    bossView: "此人再看看。"
+  }
+};
+
+// ============================================================
+// ENGINE
+// ============================================================
+const state = {
+  playerName: "",
+  currentNode: null,
+  stats: { 决: 0, 共: 0, 规: 0, 险: 0 },
+  items: new Set(),
+  flags: new Set(),
+  choices: {},
+  visitedNodes: [],
+  startedAt: Date.now()
+};
+
+window.__state = state; // debug
+
+function resetState(name) {
+  state.playerName = name;
+  state.currentNode = null;
+  state.stats = { 决: 0, 共: 0, 规: 0, 险: 0 };
+  state.items.clear();
+  state.flags.clear();
+  state.choices = {};
+  state.visitedNodes = [];
+  state.startedAt = Date.now();
+}
+
+function applyChoice(nodeId, choiceKey) {
+  const node = STORY.nodes[nodeId];
+  const choice = node.choices.find(c => c.key === choiceKey);
+  if (!choice) return null;
+  const weight = node.weight ?? 1;
+  for (const [dim, base] of Object.entries(choice.effects || {})) {
+    state.stats[dim] = (state.stats[dim] || 0) + base * weight;
+  }
+  state.choices[nodeId] = choiceKey;
+  state._justGained = null;
+  if (choice.item && !state.items.has(choice.item)) {
+    state.items.add(choice.item);
+    state._justGained = choice.item;
+  }
+  if (choice.flag && !state.flags.has(choice.flag)) {
+    state.flags.add(choice.flag);
+    if (!state._justGained) state._justGained = choice.flag;
+  }
+  state.visitedNodes.push(nodeId);
+  // next 支持函数 · 用于结局动态判定(ENDING_GATE 等)
+  return typeof choice.next === "function" ? choice.next(state) : choice.next;
+}
+
+// ---- NPC 人物卡数据(hover/click 弹窗用) ----
+// tag = 关系标签 · role = 身份 · vibe = 性格速写 · 暗线信息一律不写,仅记主线明面身份
+const NPC_PROFILES = {
+  // 内部团队
+  "阿布":      { tag: "你的 AM",    role: "AM · 这个项目的 owner",       vibe: "客户挤压他他挤压你 · 但本质不是坏人" },
+  "Jasper":    { tag: "你的同事",   role: "资深运营",                     vibe: "腹黑 嘴炮型 · 活儿干得快 走的还比你早" },
+  "Vivian":    { tag: "你的总监",   role: "你的直属总监",                 vibe: "平时存在感低" },
+  "米拉":      { tag: "你的下属",   role: "快转正的实习生",                 vibe: "紧张但努力 · KPI 112% · 转正答辩材料周日发你 review 了" },
+  "Gordon":    { tag: "顾问(挂名)", role: "顾问",                        vibe: "帽衫兜帽党 · 来无影去无踪 · 没人说得清他干嘛的" },
+  "Seraphine": { tag: "HR 总监",    role: "HR 总监",                      vibe: "邮件全用 ^_^ 签名 · 微笑保持精确 · 关心你「最近还好吗」那种关心法" },
+  // 客户
+  "Nolan":     { tag: "客户 · Aurora 市场", role: "Aurora 市场负责人",      vibe: "你跟他对接 · 他跟 Sam 对接 · 中间夹心 · 「Sam 凌晨没睡」这种话他对你说" },
+  "Sam":       { tag: "客户 · Aurora 产品", role: "Aurora 产品老板",        vibe: "凌晨 3 点用 Cursor 改 brief · 让 Claude 写 talking points · 永远不进群 · 通过 Nolan 转" },
+  // KOL
+  "RourkeHolly":  { tag: "客户钦点 #1", role: "头部 · 3.2M",       vibe: "「Email only. Do not chase.」· 高冷一姐 · 报价开头一定是 8" },
+  "KaptainK":     { tag: "客户钦点 #2", role: "中腰 · 1.8M",       vibe: "经纪人 Konstantin 代理 · 本人不露面" },
+  "Konstantin":   { tag: "经纪人",      role: "KaptainK 经纪人",   vibe: "永远在出差 · 邮件一周一回 · 报价数字里少不了 8" },
+  "TechPeter":    { tag: "客户钦点 #3", role: "中腰 · 950K",       vibe: "上月刚和海胆 Copilot 合作 · 客户判定「直接竞品」· 用不了" },
+  "EmmaPet":      { tag: "宠物类达人",  role: "Emma Nguyen",       vibe: "4 封催稿后突然甩 usage rights · 合同党 · 消耗你到麻木" },
+  "Emma Nguyen":  { tag: "宠物类达人",  role: "= EmmaPet 全名",    vibe: "4 封催稿后突然甩 usage rights · 合同党 · 消耗你到麻木" },
+  "JesseFun":     { tag: "整活达人",    role: "整活内容创作者",     vibe: "「让 Claude 辨认菜市场虾」视频破百万 · 内容自驱型 · 不接传统脚本" },
+  "TechSarah":    { tag: "B 路径备选",  role: "中腰科技类",         vibe: "深夜挖来的备选 · 待签约" },
+  "PetMolly":     { tag: "B 路径备选",  role: "宠物类",             vibe: "深夜挖来的备选 · 写过「大闸蟹母版设定贴」让客户笑出声" },
+  "NoTechBro":    { tag: "B 路径备选",  role: "反科技类",           vibe: "深夜挖来的备选 · 待签约" },
+  "AsiaVina":     { tag: "B 路径备选",  role: "亚裔生活类",         vibe: "深夜挖来的备选 · 待签约" },
+  "SportTim":     { tag: "B 路径备选",  role: "运动类",             vibe: "深夜挖来的备选 · 待签约" }
+};
+
+// ---- 道具/flag 的展示文案(公文包 UI 用) ----
+const ITEM_LABELS = {
+  hr_email_screenshot:        { name: "HR 心理评估邮件截图", note: "N01 D · Seraphine 签名 ^_^ · 入口仪式 · 暗线钥匙" },
+  v2_screenshot:              { name: "筛选漏斗截图 · PM-14", note: "N03 D · 飞书表底水印闪过" },
+  vivian_quote:               { name: "Vivian 的金句", note: "「达人是巨婴 · 客户也是巨婴 · 都是在哄婴儿」" },
+  vivian_quote_overheard:     { name: "Vivian 给 Jasper 那条原话", note: "NT2 D · 茶水间偷听 · 米拉答不上 follow-up" },
+  vivian_mila_truth:          { name: "Vivian 关于米拉的解释", note: "N04 B · 综合评分不达预期 · 同期 5 人转正 3 人" },
+  bcc_awareness_header:       { name: "[Awareness] BCC 邮件头", note: "NW2 D · HR 系统 BCC 你 · 抄送 Seraphine + pm14-ops" },
+  saw_mirror_auth:            { name: "OA 角落小字", note: "NW1 D · Mirror Auth v14 · For Cohort Personnel Only" },
+  mila_termination_metadata:  { name: "米拉离职字段编辑者", note: "N04 D · 编辑者 seraphine · 时间 周三 23:47" },
+  director_endorsement:       { name: "Vivian 那句「等你这条很久了」", note: "N06C D · 撞见型 · 总监主动等你" },
+  brief_engine_watermark:     { name: "Brief v5 底部水印", note: "N07 D · Powered by PM-14 Engagement Engine · v5.04.17" },
+  mirror_screenshot:          { name: "Mirror 数据表 · 全表", note: "N08 B · 周五会议室 · Cohort 14 行 11 是你" },
+  mila_data_row:              { name: "米拉数据行特写", note: "N08 C · 0.31 / 0.18 / 0.34 · 已离职但数字还在" },
+  gordon_confront:            { name: "Gordon 那 5 秒沉默", note: "N08 D · 他说「你早点知道也好」" },
+  contract_clause_screenshot: { name: "Aurora 合同 §4.2 截图", note: "N06C E · Sole Sourcing 反制武器 · 不计入觉察池" }
+};
+
+// ---- 察觉类道具/flag 门槛(隐藏结局触发用 · 任意持有 ≥ 4 触发 E_PM14)----
+// hr_email_screenshot 不计入 · 它是入口钥匙不是觉察证据
+const AWARENESS_MARKS = [
+  "vivian_quote",
+  "vivian_quote_overheard",
+  "vivian_mila_truth",
+  "bcc_awareness_header",
+  "saw_mirror_auth",
+  "mila_termination_metadata",
+  "director_endorsement",
+  "brief_engine_watermark",
+  "mirror_screenshot",
+  "mila_data_row",
+  "gordon_confront"
+];
+// 反制武器 — 不计入觉察池(避免反制路径意外触发 PM-14),但 ending 单独成框显示
+const WEAPONS_MARKS = [
+  "contract_clause_screenshot"
+];
+function awarenessCount() {
+  let n = 0;
+  for (const m of AWARENESS_MARKS) {
+    if (state.items.has(m) || state.flags.has(m)) n++;
+  }
+  return n;
+}
+
+// ---- 字母分档(§5.3 · v2 · 拉长分档解决数值溢出)----
+// 一周目实测容易破 ±40,因此 !! 档放在 ±25,! 档 ±10,拉出三档区分度
+function toLetter(value, posChar, negChar) {
+  if (value >= 25) return posChar + "!!";
+  if (value >= 10) return posChar + "!";
+  if (value >= 3)  return posChar;
+  if (value >= -2) return "·";
+  if (value >= -9) return negChar;
+  if (value >= -24) return negChar + "!";
+  return negChar + "!!";
+}
+function computeLetters(stats) {
+  return [
+    toLetter(stats.决, "D", "H"),
+    toLetter(stats.共, "E", "C"),
+    toLetter(stats.规, "R", "B"),
+    toLetter(stats.险, "V", "S")
+  ];
+}
+function lettersToKey(letters) {
+  // 去掉所有强度标识(! / !!)和中性符号,取出 4 字母大写;中性 · 用正向占位
+  const defaults = ["D", "E", "R", "S"];
+  return letters.map((L, i) => {
+    const bare = L.replace(/!+/g, "");
+    if (bare === "·") return defaults[i];
+    return bare.toUpperCase();
+  }).join("");
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+const $game = document.getElementById("game");
+
+// 人名自动识别表(auto-wrap 最后一步执行)
+const NPC_INTERNAL_RE = /(阿布|Jasper|Vivian|米拉|Gordon|Seraphine|Nolan|Sam)/g;
+// KOL 完整名必须在短名之前(regex alternation 左优先)· Emma Nguyen > EmmaPet · 已移除 v2.1 旧名 Julia/Emma
+const NPC_KOL_RE = /(RourkeHolly|Emma Nguyen|EmmaPet|KaptainK|TechPeter|Konstantin|JesseFun|TechSarah|PetMolly|NoTechBro|AsiaVina|SportTim)/g;
+
+function renderMarkdownInline(s) {
+  // 视觉分层:触发词 {{flag|text}} · 关键字 [[...]] · 粗体 **...** · 斜体(内心 OS) *...* · 代码 `...` · 对话 "..."
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    // 隐藏触发词:可点击文字 · 点后解锁对应 flag · 解锁后改渲染为 fired 暗色
+    // 三参数 {{flag|text|gate}} · gate 存在且玩家无该 flag/item · 退化为普通文本(暗线 gating)
+    .replace(/\{\{([a-z0-9_]+)\|([^|}]+)(?:\|([a-z0-9_]+))?\}\}/g, (_, flag, text, gate) => {
+      if (gate && !state.flags.has(gate) && !state.items.has(gate)) {
+        return text;
+      }
+      const fired = state.flags.has(flag);
+      const cls = fired ? "hot-trigger fired" : "hot-trigger";
+      const attr = fired ? "" : ` data-unlock="${flag}"`;
+      return `<span class="${cls}"${attr}>${text}</span>`;
+    })
+    .replace(/\[\[([^\]]+)\]\]/g, '<span class="keyword">$1</span>')
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*\n]+)\*/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/([\u201C])([^\u201D]+)([\u201D])/g, '<span class="dialogue">$1$2$3</span>')
+    // 人名 auto-wrap · 最后一步 · 加 data-npc 属性供 popup 系统读取
+    .replace(NPC_INTERNAL_RE, '<span class="npc-internal" data-npc="$1">$1</span>')
+    .replace(NPC_KOL_RE, '<span class="npc-kol" data-npc="$1">$1</span>');
+}
+
+function replacePlaceholders(s) {
+  let out = s.replace(/\{playerName\}/g, state.playerName || "你");
+  if (out.includes("{playerType}")) {
+    const letters = computeLetters(state.stats);
+    out = out.replace(/\{playerType\}/g, letters.join(""));
+  }
+  return out;
+}
+
+function bodyToHtml(rawBody) {
+  const processed = replacePlaceholders(rawBody);
+  const paragraphs = processed.split(/\n\n+/);
+  return paragraphs.map(p => {
+    const rawLines = p.split("\n");
+    const nonEmpty = rawLines.filter(l => l.trim() !== "");
+    // 整段所有非空行都以 > 开头 → 渲染为引用块
+    const isQuote = nonEmpty.length > 0 && nonEmpty.every(l => /^>\s?/.test(l));
+    if (isQuote) {
+      const inner = nonEmpty
+        .map(l => l.replace(/^>\s?/, ""))
+        .map(renderMarkdownInline)
+        .join("<br>");
+      return `<blockquote class="quote-block">${inner}</blockquote>`;
+    }
+    // 普通段落:先对每行做 markdown 转义,再用真正的 <br> 拼接
+    const inner = rawLines.map(renderMarkdownInline).join("<br>");
+    return "<p>" + inner + "</p>";
+  }).join("");
+}
+
+function hideBriefcase() {
+  const host = document.getElementById("briefcase");
+  if (host) host.remove();
+}
+
+function renderStartScreen() {
+  hideBriefcase();
+  $game.innerHTML = `
+    <div id="start-screen">
+      <div class="start-mirror">powered by Project Mirror</div>
+      <div class="start-title">运营修罗场</div>
+      <div class="start-subtitle-en">KOL SURVIVOR</div>
+      <div class="start-tagline">一个关于选择、咖啡和 KOL 的短剧</div>
+
+      <div class="start-briefing">
+        <div class="briefing-head">本周你的任务</div>
+        <div class="briefing-line">Client · <span class="briefing-em">Aurora AI</span></div>
+        <div class="briefing-line">Campaign · <span class="briefing-em">产品首发 · Global</span></div>
+        <div class="briefing-line">Deliverable · <span class="briefing-em">15 个达人 · 全部 live</span></div>
+        <div class="briefing-line">DDL · <span class="briefing-em">周五 EOD</span></div>
+      </div>
+
+      <form class="start-input-wrapper" id="start-form" autocomplete="off">
+        <input class="start-input" id="start-name-input" placeholder="输入你的名字" maxlength="10" />
+        <button class="start-btn" type="submit">开 始 游 戏</button>
+      </form>
+    </div>
+  `;
+  const form = document.getElementById("start-form");
+  const input = document.getElementById("start-name-input");
+  input.focus();
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const name = input.value.trim() || "阿华";
+    resetState(name);
+    goTo("N01");
+  });
+}
+
+// ---- 时间线 HUD · 根据 nodeId 推断工作日(v3 final 17 节点)----
+const DAY_MAP = {
+  // 周一
+  N01: 1, N02A: 1, N03: 1, N04B: 1,
+  // 周二(NT1 拆成 NT1A 站会本体 + NT1B 米拉走过)
+  NT1A: 2, NT1B: 2, NT2: 2, NT3: 2,
+  N_TUE_NIGHT: 2,  // 周二夜过渡节点
+  // 周三
+  NW1: 3, NW2: 3,
+  // 周四
+  N04: 4, N06C: 4,
+  N_THU_NIGHT: 4,  // 周四夜过渡节点
+  // 周五
+  N07: 5, N08: 5, ENDING_GATE: 5
+};
+function currentDay(nodeId) {
+  return DAY_MAP[nodeId] || 1;
+}
+function getCollectedItems() {
+  const out = [];
+  for (const id of state.items) {
+    const meta = ITEM_LABELS[id];
+    if (meta) out.push({ id, ...meta });
+  }
+  for (const id of state.flags) {
+    const meta = ITEM_LABELS[id];
+    if (meta) out.push({ id, ...meta });
+  }
+  return out;
+}
+
+function renderBriefcase() {
+  const collected = getCollectedItems();
+  const count = collected.length;
+  const gained = state._justGained;
+  const gainedMeta = gained ? ITEM_LABELS[gained] : null;
+  state._justGained = null; // 消费
+
+  const itemsHtml = count === 0
+    ? `<div class="empty-hint">公文包还是空的。<br>注意看桌上、邮件里、表格的角落。</div>`
+    : `<ul>${collected.map(it => `<li>${it.name}<span class="item-note">${it.note}</span></li>`).join("")}</ul>`;
+
+  let host = document.getElementById("briefcase");
+  if (!host) {
+    host = document.createElement("div");
+    host.id = "briefcase";
+    host.className = "briefcase";
+    document.body.appendChild(host);
+  }
+  const pulseClass = gainedMeta ? " pulse" : "";
+  const emptyClass = count === 0 ? " empty" : "";
+  host.innerHTML = `
+    <div class="briefcase-btn${pulseClass}${emptyClass}" id="briefcase-btn" title="公文包 (${count})">
+      &#9632;<span class="count">${count}</span>
+    </div>
+    <div class="briefcase-panel" id="briefcase-panel">
+      <h4>公文包 · ${count} 件</h4>
+      ${itemsHtml}
+    </div>
+    ${gainedMeta ? `<div class="briefcase-toast show" id="briefcase-toast">+ ${gainedMeta.name}</div>` : ""}
+  `;
+
+  const btn = document.getElementById("briefcase-btn");
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    host.classList.toggle("open");
+  };
+  document.addEventListener("click", (e) => {
+    if (!host.contains(e.target)) host.classList.remove("open");
+  }, { once: true });
+
+  if (gainedMeta) {
+    const toast = document.getElementById("briefcase-toast");
+    setTimeout(() => { if (toast) toast.classList.remove("show"); }, 1800);
+  }
+}
+
+// ---- Meta 动态 OS:险 ≥ 8 时闪回一句旁白 ----
+const META_WHISPERS = [
+  "(你感觉有人正在屏幕后面看你这一行回复。)",
+  "(你不确定这条选择,是你在选,还是被选出来的。)",
+  "(会议室的灯,今天又没关。)",
+  "(米拉的工位已经被收走了,可你还能闻到她的香水。)",
+  "(你想起 Seraphine 的签名,^_^。)",
+  "(你下意识瞥了一眼摄像头,它的绿点,没亮。但你不放心。)"
+];
+function pickMetaWhisper(nodeId) {
+  // 用 nodeId 字符和 险值做一个稳定哈希,同一节点同一险值永远取同一句
+  const risk = state.stats.险 | 0;
+  let h = risk;
+  for (let i = 0; i < nodeId.length; i++) h = (h * 31 + nodeId.charCodeAt(i)) >>> 0;
+  return META_WHISPERS[h % META_WHISPERS.length];
+}
+
+// v3.2:prelude 浮窗 toast · 自动 fade in/out · 点击 dismiss
+// 动态时长:每字 60ms · 最少 8 秒 · 最多 30 秒
+function showPreludeToast(text) {
+  // 清掉前一个 toast(如果还在)
+  document.querySelectorAll('.prelude-toast').forEach(el => el.remove());
+
+  const readMs = Math.max(8000, Math.min(30000, text.length * 60));
+  const seconds = Math.round(readMs / 1000);
+
+  const toast = document.createElement('div');
+  toast.className = 'prelude-toast';
+  toast.innerHTML = `
+    <div class="prelude-toast-head">— 上文 —</div>
+    <div class="prelude-toast-body">${bodyToHtml(text)}</div>
+    <div class="prelude-toast-hint">点击关闭(${seconds} 秒后自动消失)</div>
+  `;
+  document.body.appendChild(toast);
+
+  // fade-in (next frame)
+  requestAnimationFrame(() => toast.classList.add('show'));
+
+  // 自动 fade-out
+  const autoClose = setTimeout(() => closeToast(toast), readMs);
+
+  // 点击 dismiss
+  toast.addEventListener('click', () => {
+    clearTimeout(autoClose);
+    closeToast(toast);
+  });
+}
+function closeToast(toast) {
+  toast.classList.remove('show');
+  setTimeout(() => toast.remove(), 400);
+}
+
+function renderTimeline(nodeId) {
+  const day = currentDay(nodeId);
+  const days = ["周一", "周二", "周三", "周四", "周五"];
+  const daysHtml = days.map((d, i) => {
+    const idx = i + 1;
+    let cls = "day";
+    if (idx < day) cls += " past";
+    else if (idx === day) cls += " active";
+    const sep = i < days.length - 1 ? '<span class="sep">›</span>' : "";
+    return `<span class="${cls}">${d}</span>${sep}`;
+  }).join("");
+  // 任务进度 · 节点可选定义 task 字段 (string 或 function(state))
+  // task 比上一帧的 task 不同 → 加 .updated class 触发 flash 动画
+  const node = STORY.nodes[nodeId];
+  let taskHtml = `Aurora Campaign <span class="goal-focus">· 15 人 · DDL 周五 EOD</span>`;
+  let taskUpdated = false;
+  if (node && node.task) {
+    const taskText = typeof node.task === "function" ? node.task(state) : node.task;
+    if (taskText) {
+      taskHtml = `<span class="task-label">当前任务</span><span class="task-text">${taskText}</span>`;
+      if (state._lastTaskText !== taskText) {
+        taskUpdated = true;
+        state._lastTaskText = taskText;
+      }
+    }
+  }
+  const goalCls = taskUpdated ? "timeline-goal updated" : "timeline-goal";
+  return `
+    <div class="timeline">
+      <div class="${goalCls}">${taskHtml}</div>
+      <div class="timeline-days">${daysHtml}</div>
+    </div>
+  `;
+}
+
+function renderNode(nodeId, opts) {
+  const node = STORY.nodes[nodeId];
+  if (!node) {
+    console.error("Unknown node:", nodeId);
+    return;
+  }
+  state.currentNode = nodeId;
+  const flashKey = opts && opts.flashKey; // 重渲时,标记哪个 choice 要闪现
+
+  // 动态 prelude:根据上一节点的选择显示不同前言
+  let preludeText = "";
+  if (node.preludes) {
+    const lastNodeId = state.visitedNodes[state.visitedNodes.length - 1];
+    const lastChoice = lastNodeId ? state.choices[lastNodeId] : null;
+    const key = lastNodeId && lastChoice ? `${lastNodeId}_${lastChoice}` : null;
+    preludeText = (key && node.preludes[key]) || node.preludes._default || "";
+  }
+  // flag 驱动的 prelude(N08 等全局心理状态场景)
+  if (node.preludesByFlag) {
+    for (const [flag, text] of Object.entries(node.preludesByFlag)) {
+      if (state.flags.has(flag) || state.items.has(flag)) { preludeText = (preludeText ? preludeText + "\n\n" : "") + text; }
+    }
+  }
+  const bodyText = typeof node.body === "function" ? node.body(state) : node.body;
+  // v3.2:prelude 不再直接拼到 body · 改成 toast 浮窗 + body 顶部折叠引用
+  const bodyHtml = bodyToHtml(bodyText);
+  const preludeFoldedHtml = preludeText
+    ? `<details class="prelude-folded"><summary>▸ 上文 · 点击展开</summary><div class="prelude-folded-body">${bodyToHtml(preludeText)}</div></details>`
+    : "";
+  const visibleChoices = node.choices.filter(c => !c.condition || c.condition(state));
+  const choicesHtml = visibleChoices.map((choice, idx) => {
+    const isM2 = choice.next === "__M2__";
+    let cls = isM2 ? "choice disabled" : "choice";
+    if (choice.key === flashKey) cls += " just-unlocked";
+    // 显示 key 按可见顺序:A, B, C, D —— 隐藏选项不留字母缺口,避免被 spoil
+    const displayKey = String.fromCharCode(65 + idx);
+    return `<button class="${cls}" data-key="${choice.key}">
+      <span class="choice-key">${displayKey}</span>${renderMarkdownInline(choice.text)}
+    </button>`;
+  }).join("");
+
+  // 阈值和新分档 V! (>=10) 对齐 —— 只有"察觉党"能看到
+  const whisperHtml = (state.stats.险 >= 10)
+    ? `<div class="meta-whisper">${pickMetaWhisper(nodeId)}</div>`
+    : "";
+
+  const summaryHtml = node.summary
+    ? `<div class="node-summary">${replacePlaceholders(node.summary)}</div>`
+    : "";
+  $game.innerHTML = `
+    ${renderTimeline(nodeId)}
+    <div class="chapter-tag">${node.chapter}</div>
+    <div class="node-title">${node.title}</div>
+    ${summaryHtml}
+    ${preludeFoldedHtml}
+    <div class="node-body">${bodyHtml}</div>
+    ${whisperHtml}
+    <div class="choices">${choicesHtml}</div>
+  `;
+
+  // v3.2:prelude 浮窗 toast(自动 8 秒消失 / 点击 dismiss)
+  if (preludeText) {
+    showPreludeToast(preludeText);
+  }
+
+  renderBriefcase();
+
+  let locked = false;
+  $game.querySelectorAll(".choice:not(.disabled)").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (locked) return;
+      locked = true;
+      $game.querySelectorAll(".choice").forEach(b => {
+        b.style.pointerEvents = "none";
+        b.style.opacity = b.classList.contains("disabled") ? "0.2" : "0.55";
+      });
+      const key = btn.dataset.key;
+      const next = applyChoice(nodeId, key);
+      if (!next) { locked = false; return; }
+      window.scrollTo(0, 0);
+      goTo(next);
+    });
+  });
+
+  // 隐藏触发词:点击 → 解锁对应 flag → 重渲染当前节点 → 新 choice 闪现
+  $game.querySelectorAll(".hot-trigger[data-unlock]").forEach(span => {
+    span.addEventListener("click", () => {
+      const flag = span.dataset.unlock;
+      if (state.flags.has(flag)) return;
+      // 记下当前可见 choice key,用来找"新解锁"的那个
+      const before = new Set(
+        node.choices.filter(c => !c.condition || c.condition(state)).map(c => c.key)
+      );
+      state.flags.add(flag);
+      const after = node.choices.filter(c => !c.condition || c.condition(state));
+      const newKey = after.find(c => !before.has(c.key))?.key;
+      renderNode(nodeId, { flashKey: newKey });
+    });
+  });
+
+  if (!flashKey) window.scrollTo(0, 0);
+}
+
+function goTo(nextId) {
+  if (nextId === "__M2__") {
+    renderM2Placeholder();
+    return;
+  }
+  if (STORY.nodes[nextId]) {
+    renderNode(nextId);
+  } else if (STORY.endings[nextId]) {
+    renderEnding(nextId);
+  } else {
+    console.error("Unknown target:", nextId);
+  }
+}
+
+function renderM2Placeholder() {
+  $game.innerHTML = `
+    <div class="ending-screen" style="text-align:center; padding-top: 120px;">
+      <div class="ending-label">DEMO 分支提示</div>
+      <div class="ending-name" style="font-size:28px;">此路径在 M2 开放</div>
+      <div class="ending-body" style="color:#a39978;">
+        <p>当前 M1 demo 仅演示<strong>路径① 正常社畜</strong>。</p>
+        <p>完整 30+ 节点 · 6 结局 · 真结局隐藏路径 · 二周目系统<br>将在 M2 / M3 解锁。</p>
+      </div>
+      <button class="restart-btn" id="back-btn">返 回 上 一 步</button>
+    </div>
+  `;
+  document.getElementById("back-btn").addEventListener("click", () => {
+    if (state.currentNode) renderNode(state.currentNode);
+    else renderStartScreen();
+  });
+}
+
+function renderEnding(endingId) {
+  const ending = STORY.endings[endingId];
+  if (!ending) { console.error("Unknown ending:", endingId); return; }
+  hideBriefcase();
+
+  const letters = computeLetters(state.stats);
+  const personalityKey = lettersToKey(letters);
+  const persona = PERSONALITY[personalityKey] || PERSONALITY._DEFAULT;
+
+  const endingBodyHtml = bodyToHtml(ending.body);
+  const lettersDisplay = letters.join(" ");
+
+  const statsStr = `决 ${formatStat(state.stats.决)} · 共 ${formatStat(state.stats.共)} · 规 ${formatStat(state.stats.规)} · 险 ${formatStat(state.stats.险)}`;
+
+  $game.innerHTML = `
+    <div class="ending-screen">
+      <div class="ending-label">${ending.label}</div>
+      <div class="ending-name">${ending.title}</div>
+      <div class="ending-body">${endingBodyHtml}</div>
+
+      <hr class="ending-divider">
+
+      <div class="personality-card">
+        <div class="personality-letters">${lettersDisplay}</div>
+        <div class="personality-title">${state.playerName} · ${persona.title}</div>
+
+        <div class="personality-row"><span class="label">核心特质</span><span class="value">${renderMarkdownInline(persona.mentalState)}</span></div>
+        <div class="personality-row"><span class="label">擅长应对</span><span class="value">${renderMarkdownInline(persona.goodAt)}</span></div>
+        <div class="personality-row"><span class="label">容易翻车</span><span class="value">${renderMarkdownInline(persona.badAt)}</span></div>
+        <div class="personality-row"><span class="label">最佳搭档</span><span class="value">${renderMarkdownInline(persona.bestPartner)}</span></div>
+        <div class="personality-row"><span class="label">天敌</span><span class="value">${renderMarkdownInline(persona.nemesis)}</span></div>
+        <div class="personality-row"><span class="label">老板眼中的你</span><span class="value">${renderMarkdownInline(persona.bossView)}</span></div>
+      </div>
+
+      ${(() => {
+        const all = getCollectedItems();
+        // 觉察线索:严格按 AWARENESS_MARKS 过滤
+        const clues = all.filter(c => AWARENESS_MARKS.includes(c.id));
+        // 反制武器:严格按 WEAPONS_MARKS 过滤
+        const weapons = all.filter(c => WEAPONS_MARKS.includes(c.id));
+        let html = "";
+        if (clues.length === 0) {
+          html += `<div class="clue-box empty"><div class="clue-head">【本局线索 · 0/${AWARENESS_MARKS.length}】</div><div class="clue-empty">这一周你什么都没注意到。也许下一周,你会多抬一次头。</div></div>`;
+        } else {
+          html += `<div class="clue-box"><div class="clue-head">【本局线索 · ${clues.length}/${AWARENESS_MARKS.length}】</div><ul>${clues.map(c => `<li><strong>${c.name}</strong><span class="clue-note">${c.note}</span></li>`).join("")}</ul></div>`;
+        }
+        if (weapons.length > 0) {
+          html += `<div class="clue-box"><div class="clue-head">【反制武器 · ${weapons.length}/${WEAPONS_MARKS.length}】</div><ul>${weapons.map(c => `<li><strong>${c.name}</strong><span class="clue-note">${c.note}</span></li>`).join("")}</ul></div>`;
+        }
+        return html;
+      })()}
+
+      <div class="total-account">
+        <strong>【这一局的总账】</strong><br>
+        ${ending.totalAccount}
+      </div>
+
+      <div class="stats-debug">${statsStr}</div>
+
+      <div class="replay-hint">共 5 个结局 · 16 型人格 · 你这一局是 ${lettersDisplay} · 试试别的路线?</div>
+
+      <button class="restart-btn" id="restart-btn">重 新 开 始</button>
+    </div>
+  `;
+  document.getElementById("restart-btn").addEventListener("click", () => {
+    renderStartScreen();
+  });
+  window.scrollTo(0, 0);
+}
+
+function formatStat(n) {
+  if (n > 0) return "+" + n;
+  return String(n);
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+renderStartScreen();
+
+// Debug helpers
+window.skipTo = (nodeId) => {
+  if (!state.playerName) state.playerName = "阿华";
+  renderNode(nodeId);
+};
+window.jumpEnding = (id) => {
+  if (!state.playerName) state.playerName = "阿华";
+  renderEnding(id);
+};
+
+// ---- NPC 人物卡 popup 系统 · 桌面 hover · 移动 click ----
+(function() {
+  const card = document.getElementById('npc-popup');
+  const backdrop = document.getElementById('npc-popup-backdrop');
+  const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+  let currentTarget = null;
+
+  function fillCard(name) {
+    const profile = NPC_PROFILES[name];
+    if (!profile) return false;
+    card.querySelector('.npc-popup-tag').textContent = profile.tag || '';
+    card.querySelector('.npc-popup-name').textContent = name;
+    card.querySelector('.npc-popup-role').textContent = profile.role || '';
+    card.querySelector('.npc-popup-vibe').textContent = profile.vibe || '';
+    return true;
+  }
+
+  function showCard(target, name) {
+    if (!fillCard(name)) return;
+    if (isTouchDevice) {
+      backdrop.classList.add('show');
+      card.classList.add('show');
+    } else {
+      const rect = target.getBoundingClientRect();
+      card.style.left = rect.left + 'px';
+      card.style.top = (rect.bottom + 6) + 'px';
+      card.classList.add('show');
+      // 边界修正:溢出屏幕则反弹
+      const cardRect = card.getBoundingClientRect();
+      if (cardRect.right > window.innerWidth - 10) {
+        card.style.left = (window.innerWidth - cardRect.width - 10) + 'px';
+      }
+      if (cardRect.bottom > window.innerHeight - 10) {
+        card.style.top = (rect.top - cardRect.height - 6) + 'px';
+      }
+    }
+  }
+
+  function hideCard() {
+    card.classList.remove('show');
+    backdrop.classList.remove('show');
+    currentTarget = null;
+  }
+
+  // 桌面:hover 进入显示 · 离开隐藏
+  document.addEventListener('mouseover', (e) => {
+    if (isTouchDevice) return;
+    const target = e.target.closest('.npc-internal[data-npc], .npc-kol[data-npc]');
+    if (target && target !== currentTarget) {
+      currentTarget = target;
+      showCard(target, target.dataset.npc);
+    }
+  });
+  document.addEventListener('mouseout', (e) => {
+    if (isTouchDevice) return;
+    const target = e.target.closest('.npc-internal[data-npc], .npc-kol[data-npc]');
+    if (target && target === currentTarget) {
+      const related = e.relatedTarget;
+      if (!related || !target.contains(related)) {
+        hideCard();
+      }
+    }
+  });
+
+  // 移动:点击人名弹卡 · 但选项按钮内的人名不弹(防干扰选项点击)
+  document.addEventListener('click', (e) => {
+    if (e.target === backdrop) {
+      hideCard();
+      return;
+    }
+    if (!isTouchDevice) return;
+    const target = e.target.closest('.npc-internal[data-npc], .npc-kol[data-npc]');
+    if (target && !target.closest('button') && !target.closest('.choice')) {
+      e.preventDefault();
+      e.stopPropagation();
+      currentTarget = target;
+      showCard(target, target.dataset.npc);
+    }
+  });
+
+  // ESC 关闭
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hideCard();
+  });
+})();
+</script>
+</body>
+</html>
