@@ -104,9 +104,9 @@
     background: #1a1a1f;
     border: 1px solid rgba(232, 184, 124, 0.45);
     border-left: 3px solid #e8b87c;
-    padding: 12px 16px;
+    padding: 16px 18px;
     border-radius: 4px;
-    max-width: 280px;
+    max-width: 440px;
     z-index: 999;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     color: #e8e8e8;
@@ -435,6 +435,78 @@
     color: #7d7460;
     letter-spacing: 1px;
   }
+  /* v3 · 代价即时显形浮窗 · 选完后弹出 · 演出 cost · 手动按钮确认 · 不倒计时 */
+  .consequence-beat {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.96);
+    z-index: 1000;
+    background: rgba(20, 14, 14, 0.97);
+    color: #f5ede0;
+    padding: 30px 34px 22px;
+    border-radius: 6px;
+    border: 1px solid rgba(200, 74, 62, 0.55);
+    border-left: 3px solid #c84a3e;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(200, 74, 62, 0.12);
+    max-width: 480px;
+    width: 86%;
+    cursor: default;
+    opacity: 0;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .consequence-beat.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .consequence-beat-head {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #c84a3e;
+    text-align: center;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+  }
+  .consequence-beat-body {
+    font-size: 16px;
+    line-height: 1.85;
+    color: #f3ead2;
+    text-align: center;
+  }
+  .consequence-beat-body p {
+    margin: 0 0 6px;
+  }
+  .consequence-beat-body p:last-child { margin-bottom: 0; }
+  .consequence-beat-body em { color: #b8a888; font-style: italic; }
+  .consequence-beat-body strong { color: #fff4dc; }
+  .consequence-beat-btn {
+    display: block;
+    margin: 22px auto 0;
+    padding: 10px 40px;
+    background: rgba(200, 74, 62, 0.15);
+    border: 1px solid #c84a3e;
+    color: #f5ede0;
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 6px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+  }
+  .consequence-beat-btn:hover {
+    background: rgba(200, 74, 62, 0.32);
+    color: #fff4dc;
+  }
+  .consequence-beat-btn:active {
+    transform: scale(0.98);
+  }
+  @media (max-width: 700px) {
+    .consequence-beat { padding: 22px 20px 18px; }
+    .consequence-beat-body { font-size: 15px; }
+    .consequence-beat-btn { padding: 9px 32px; letter-spacing: 4px; }
+  }
+
   /* prelude 折叠备份(body 顶部 details) */
   .prelude-folded {
     margin: 0 0 14px;
@@ -583,6 +655,26 @@
     font-size: 12px;
     margin-left: 6px;
   }
+  /* v3 · 选项代价行 · 显形给玩家"选这个会失去什么" · 不确定句式 · 支持 \n 换行 */
+  .choice .choice-cost {
+    display: block;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(125, 116, 96, 0.35);
+    font-size: 13px;
+    line-height: 1.7;
+    color: #9a8e72;
+    font-style: normal;
+    white-space: pre-wrap;
+  }
+  .choice .choice-cost::before {
+    content: "代价 · ";
+    color: #c84a3e;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .choice:hover .choice-cost { color: #c0b48f; }
+  .choice .choice-cost em { color: #b8a888; }
 
   /* === START SCREEN === */
   #start-screen {
@@ -713,6 +805,102 @@
     .role-icon { font-size: 26px; }
     .role-name { font-size: 16px; letter-spacing: 1px; }
     .role-desc { font-size: 11px; min-height: 48px; }
+  }
+  /* v3 · Step 2 性别选择(运营专属) */
+  .gender-step.hidden { display: none; }
+  .gender-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    margin: 24px 0 18px;
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .gender-card {
+    border: 1px solid rgba(125, 116, 96, 0.4);
+    background: rgba(14, 14, 18, 0.55);
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(4px);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+  }
+  .gender-card:hover {
+    border-color: #e8b87c;
+    transform: translateY(-3px);
+  }
+  .gender-card.selected {
+    border-color: #e8b87c;
+    box-shadow: 0 0 0 2px #e8b87c, 0 8px 32px rgba(232, 184, 124, 0.3);
+  }
+  .gender-portrait {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    filter: brightness(0.78) saturate(0.85);
+    transition: filter 0.3s;
+  }
+  .gender-card:hover .gender-portrait,
+  .gender-card.selected .gender-portrait {
+    filter: brightness(1) saturate(1);
+  }
+  .gender-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 12px 14px;
+    background: linear-gradient(to top, rgba(14,14,18,0.96) 35%, rgba(14,14,18,0));
+    color: #f3ead2;
+    font-size: 16px;
+    letter-spacing: 4px;
+    font-weight: 600;
+  }
+  .gender-card.selected .gender-label { color: #e8b87c; }
+  .gender-back {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: #7d7460;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+  }
+  .gender-back:hover { color: #c6b78f; }
+  @media (max-width: 720px) {
+    .gender-grid { gap: 10px; max-width: 100%; }
+    .gender-label { font-size: 14px; padding: 12px 10px 10px; }
+  }
+  /* v3 · NPC popup 立绘头像 · 1:1 大图 · 左图右文 */
+  .npc-popup-portrait {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    object-position: center top;
+    border-radius: 3px;
+    border: 1px solid rgba(232, 184, 124, 0.35);
+    flex-shrink: 0;
+    display: none;
+    background: #0e0e12;
+  }
+  .npc-popup-portrait.has { display: block; }
+  .npc-popup-card.show {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .npc-popup-text { flex: 1; min-width: 0; }
+  @media (pointer: coarse), (max-width: 640px) {
+    .npc-popup-portrait { width: 160px; height: 160px; }
   }
   .start-mirror {
     font-family: "JetBrains Mono", monospace;
@@ -1023,10 +1211,13 @@
 <!-- NPC 人物卡 popup · hover (桌面) / tap (移动) 触发 -->
 <div id="npc-popup-backdrop" class="npc-popup-backdrop" aria-hidden="true"></div>
 <div id="npc-popup" class="npc-popup-card" role="tooltip" aria-hidden="true">
-  <div class="npc-popup-tag"></div>
-  <div class="npc-popup-name"></div>
-  <div class="npc-popup-role"></div>
-  <div class="npc-popup-vibe"></div>
+  <img class="npc-popup-portrait" alt="">
+  <div class="npc-popup-text">
+    <div class="npc-popup-tag"></div>
+    <div class="npc-popup-name"></div>
+    <div class="npc-popup-role"></div>
+    <div class="npc-popup-vibe"></div>
+  </div>
 </div>
 
 <script>
@@ -1041,135 +1232,122 @@ const STORY = {
     // ---------- 第一章 · 又一个周一 ----------
     N01: {
       chapter: "第一章 · 又一个周一",
-      title: "又一个周一",
-      summary: "周一 09:59 · HR 邮件抽到你 + 阿布微信催改 Aurora 名单",
-      task: "周一 09:59 · 142 封未读 · 先活下来",
+      title: "9:30 那场答辩",
+      summary: "周一 9:32 · 你迟到 2 分钟 · 陆屿答辩已开始",
+      task: "9:32 · 三条同时戳你 · HR / 客户 / 陆屿",
       weight: 3,
-      body: `七点半闹钟响了,你按掉。
-八点响了,你又按掉。
-现在 09:59,电梯镜面里头发还有昨晚没烘干的褶子。
+      body: `电梯到二十三楼。出来才想起 —— 今天 9:30 是陆屿的转正答辩。
 
-*你习惯性按 21 楼,到门口才想起自己在 23 楼。*
-*三个月了,这电梯还没把你记住。*
+现在 9:32。
 
-工位,灯还没亮你就把包甩上椅子。
+*他周日 23:47 发你 review。你睡着了。*
 
-**邮箱 142 未读**。
+——
 
-置顶一封 —— HR-System:
+邮箱 142 未读。置顶 HR-System:
 
-> **【请完成新入职心理评估 · 仅需 2 分钟】**
->
-> 亲爱的 {playerName},公司很重视每位同事的心理状态。这是一份轻松的小测试。
+> **【请完成新入职心理评估 · Part 3/3】**
 >
 > —— HR Seraphine {{unlock_n01|^_^}}
 
-*谢谢 Seraphine,周一第一波 judge,准时到账。*
-*你做这行三年,还没遇过一个"仅需 2 分钟"的。*
-
-你正要把它拖进"稍后处理"文件夹,微信蹦了一下。
+做这行三年,你见过的 HR 没一个签名画 ^_^。
 
 ——
 
-**阿布 · 微信 09:58**
+**阿布 · 微信 9:33**
 
-> Aurora 客户那边说我们昨天给的名单没有别家精准哎
-> 今天可以辛苦再找点新的人给他们提报上去嘛
-> 还有个事 · 客户说这周不给新版名单 他们要开始**比价**了
-> 你知道我意思吧
+> Aurora 客户说昨天名单不够精准 今天再找点
+> 还有 客户这周开始**比价**了 你知道我意思吧
 
-*"比价" —— 三个字。*
-*别家。别家是谁。*
-*你鼠标一边挪 · 一边心里已经在 ezzzyKOL 的刷新键上热身。*`,
+——
+
+**陆屿 · 微信 9:35**
+
+> 我等下答辩 谢谢你周末帮我看
+> [ 转正答辩 v3 final.pdf ]
+
+*他发的是 v3 final。你昨晚看的是 v2。*`,
       choices: [
-        { key: "A", text: "*哎行吧,客户最大。* 先回阿布一句“好滴收到,下午给你”", effects: { 决: 1, 共: 1, 规: 2 }, next: "N02A", flag: "compliant_a" },
-        { key: "B", text: "*什么客户啊,懂不懂我江东第一慧眼的含金量!* 先把那问卷填了再说,阿布不回先", effects: { 决: 2, 险: 2, 规: -1, 共: -1 }, next: "N02A", flag: "ghosted_bryson" },
-        { key: "C", text: "*怎么可能!* 让阿布把这话再往前递一层 —— 拉个会,客户来一起把 brief 过一遍,比我猜“别家”是谁靠谱", effects: { 决: 2, 规: 2, 共: 1 }, next: "N02A", flag: "pro_alignment" },
-        { key: "D", text: "*这 HR 签名怎么回事,一个大公司天天 ^_^ 是个什么风格.* 截一下这封邮件存着", effects: { 规: 1, 险: 1, 决: 1 }, next: "N02A", item: "hr_email_screenshot", condition: s => s.flags.has("unlock_n01") }
+        { key: "A", text: "陆屿先 —— 给他打段长语音 · 周末没看完抱歉 · 答辩你信他 · 中午吃饭。", cost: "阿布会在上司那告你一状 · 说你效率低下。", beat: "**9:55**。\n阿布群里 · @ 你 · 第三次。\n「人呢」", effects: { 决: 1, 共: 3, 规: -1, 险: 1 }, next: "N02", flag: "prioritized_lu" },
+        { key: "B", text: "客户先 —— 回阿布「中午前给你」 · 打开 ezzzyKOL 翻人。陆屿那条不回。", cost: "陆屿拿着你没看过的答辩文档 · 赶鸭子上架参加了答辩。", beat: "**13:42**。\n你翻到 ezzzyKOL 第 14 个。\n陆屿那条「我等下答辩」· 灰色 · 没有「对方正在输入」。", effects: { 决: 2, 共: -2, 规: 2, 险: -1 }, next: "N02", flag: "chose_client_over_lu" },
+        { key: "C", text: "先解决弹窗 —— 阿布「在看」 · 陆屿不回 · 先把 HR 那个 Part 3/3 填了。", cost: "阿布、陆屿对你的好感度 · 都降低了。", beat: "**10:05**。\nHR 弹窗 · 还在等。\n阿布微信:?\n陆屿那条 · 已读未回。", effects: { 决: -1, 共: -1, 规: 1, 险: 1 }, next: "N02", flag: "ducked_everything" },
+        { key: "D", text: "*这个签名让你想存档 ——* 截图 Seraphine 这封 · 存进相册。回阿布「在看」 · 陆屿不回。", cost: "陆屿在等你回一句加油 · 你存了一张 HR 邮件截图。", beat: "你按下截屏。\n再抬头 · **9:36**。\n陆屿那条「我等下答辩」· 灰了。\n不会再有第二条。", effects: { 决: 1, 共: -1, 规: 1, 险: 1 }, next: "N02", item: "hr_email_screenshot", flag: "archived_hr_screenshot", condition: s => s.flags.has("unlock_n01") }
       ]
     },
 
-    N02A: {
+    N02: {
       chapter: "第一章 · 又一个周一",
-      title: "入职心理评估 · Part 3/3",
-      summary: "10:05 · HR 强制问卷弹窗 · 不提交无法关闭 · 时间跳到 13:50",
-      task: "HR 心理评估问卷 · 不提交无法关闭弹窗",
-      weight: 0.5,
-      body: `你点"稍后处理"正要关掉,弹窗跳出来:
+      title: "14:50 在吗 楼下喝个咖啡",
+      summary: "周一 14:50 · 陆屿答辩反馈结束 · 他约你下楼 · 你不知道他要说什么",
+      task: "14:50 · 陆屿约你下楼 · Aurora 名单缺 3 人 EOD",
+      weight: 2,
+      body: `14:00 陆屿答辩+反馈会结束。
 
-> **您有 1 份未完成的评估 · 提交前无法关闭此窗口**
+Seraphine 和阿布跟他说:「我们再和 leadership 确认 · EOD 给答复。」
 
-*行吧。*
+14:00–14:50 陆屿在工位。三小时没说话。
 
 ——
 
-> **Growmax 入职心理评估 · Part 3/3** · 共 3 题
+Aurora 名单 EOD 要交。你 8 个候选 · 缺 3 个。
+阿布 13:50 在群里 @ 过你一次。
 
-*你飞速点完前两题(brief 反复 · 跨时区 follow up · 都是套话题)· 选项扫一眼就过。*
-*第三题你停了一下:*
+——
 
-> **题 3** · 大客户的小事 × 小客户的大事同时撞上 · 你先:
-> ○ 大客户的小事(关系重要)
-> ○ 小客户的大事(事情重要)
-> ○ 通知双方,问能否延后
-> ○ 拉 AM 一起拍
+**陆屿 · 微信 14:50**
 
-*屏幕右下角,微信还在闪 —— 阿布那条"辛苦再找点新的人嘛"没下去。*`,
+> 在吗 楼下喝个咖啡
+
+*他还没收到答辩结果。*
+*你猜他想说什么。*`,
       choices: [
-        { key: "A", text: "*“认真填,反正才 1 题。”* 你停了 20 秒,选了最像自己的", effects: { 决: 1, 共: 1 }, next: "N03", flag: "profile_thoughtful" },
-        { key: "B", text: "*“第二个第二个,交了。”* 5 秒关窗口", effects: { 险: 1, 决: 1 }, next: "N03", flag: "profile_careless" },
-        { key: "C", text: "*“挑看起来最不扎眼的那个。”* 不冒尖 · 不冒头 · 避险模式", effects: { 规: 1, 共: -1 }, next: "N03", flag: "profile_defensive" },
-        { key: "D", text: "*你打开手机相册那张 ^_^ 截图对着看了一眼,然后填得特别小心 —— 像有人在背后。*", effects: { 决: 1, 险: 1 }, next: "N03", flag: "profile_aware", condition: s => s.items.has("hr_email_screenshot") }
+        { key: "A", text: "现在下去 —— 回「在 我下来」。Aurora 那 3 个回家补。", cost: "Aurora 名单今晚补不完 · 阿布会群里点你三次。\n陆屿会塞你点东西 · 不会解释这是什么。", beat: "楼下星巴克。\n你坐下还没几分钟 · 他手机震了一下。\n屏幕亮起 · 写着「**爸**」。\n他看了一眼 · 按了拒接 · 放回口袋。\n问你「刚才你说什么来着」。", effects: { 决: 1, 共: 3, 规: -2, 险: 1 }, next: "N03", flag: "went_down_immediately" },
+        { key: "B", text: "半小时后 —— 回「半小时 我把这单发完下去」 · 把当前邮件发了再说。", cost: "陆屿等你下楼时 · 挂了一个电话 · 你来了他没说话。\n他给你留了点东西 · 没贴条。", beat: "便利店门口的小台阶上。\n他坐着 · 手里捧着手机。\n屏幕黑了。\n像是刚挂掉一个电话 · 又没去打开下一个 app。", effects: { 决: 1, 共: 0, 规: 1, 险: 0 }, next: "N03", flag: "went_down_late" },
+        { key: "C", text: "改约晚上 —— 回「今天搞不开 晚上一起吃饭?」 · 继续翻 ezzzyKOL。", cost: "陆屿那条对话 · 之后不会再有动静。", beat: "他回「**好**」。\n一个字。\n屏幕又黑了。", effects: { 决: 1, 共: -3, 规: 1, 险: -1 }, next: "N03", flag: "rescheduled_dinner" },
+        { key: "D", text: "*这个签名 ——* 你下楼 · 第一句问的是:「你答辩 reviewer 名单里有 Seraphine 吗?」", cost: "陆屿想给你的那个东西 · 这次不会到你手上。\n他帮你过完名单之后 · 不会再像上午那样回你。", beat: "他塞回包之后 · 手机震了一下。\n屏幕亮起 · 写着「**爸**」。\n他看了一眼 · 按了拒接 · 没解释。\n他说「我得回上去 · Aurora 那个名单我帮你再过一遍」。", effects: { 决: 2, 共: -1, 规: -1, 险: 3 }, next: "N03", item: "lu_review_seraphine_present", flag: "asked_about_seraphine", condition: s => s.items.has("hr_email_screenshot") }
       ]
     },
 
     N03: {
-      chapter: "第二章 · Brief 风云",
-      title: "Aurora · 15 人名单",
-      summary: "周一 14:00 · 客户又改 brief · ezzzyKOL 筛 Aurora 15 人 · 缺 6 人",
-      task: "Aurora 名单 · 已筛 9 / 15 · 缺 6 人 · DDL 周五 EOD",
-      weight: 2,
+      chapter: "第一章 · 又一个周一",
+      title: "17:00 离职与微信",
+      summary: "周一 17:00 · 飞书字段「陆屿 已离职」· 工位空了 · 陆屿一条微信",
+      task: "陆屿 17:00 离职 · 你欠他的债 · 这辈子还不上了",
+      weight: 3,
       preludesByFlag: {
-        compliant_a: `[系统弹窗] 您的评估已提交\n结果将纳入未来的岗位适配参考 · 感谢您的配合\n—— HR Seraphine ^_^\n\n*你"嗯"了一声,没什么波动。*\n\n——\n\n*再抬头,是 13:50。咖啡凉了第二次。手机闹钟响。*\n\n> **Aurora 项目群(7)** · 阿布 · 刚刚\n>\n> @{playerName} 客户产品那边说 brief 又改一下哎\n> 他们说隔壁家那个"**帝王蟹 Agent**"上周火了 日活破 500 万\n> 他们连夜赶了个"**大闸蟹 Agent**"哎 还分**公母版本**\n> 公蟹主攻生产力 母蟹主攻情感陪伴 客户说比帝王蟹厉害多了\n> 下午 4 点前给达人同步一下新版 辛苦辛苦\n\n*第三版了。*\n*上周"帝王蟹 Agent",这周"大闸蟹 Agent"还分公母。*\n*下周是不是该石斑鱼了。*`,
-        ghosted_bryson: `[系统弹窗] 您的评估已提交\n结果将纳入未来的岗位适配参考 · 感谢您的配合\n—— HR Seraphine ^_^\n\n*你"嗯"了一声,没什么波动。*\n\n——\n\n*再抬头,是 13:50。咖啡凉了第二次。手机闹钟响。*\n\n> **Aurora 项目群(7)** · 阿布 · 刚刚\n>\n> @{playerName} @Jasper 客户 brief 改了\n> 隔壁"**帝王蟹 Agent**"上周日活破 500 万 客户老板昨晚刷到没睡\n> 今早拍板加急 让我们对标做个"**大闸蟹 Agent**" 还分**公母版本**\n> 公蟹干活 母蟹陪聊 说是"差异化打到帝王蟹打不到的下沉场景"\n> 4 点前给达人同步一下 谢谢\n\n*Jasper 抬头:"这什么鬼。咱做 AI 还是做水产?"*\n*他没等回答 · 转回去刷自己的手机。*\n*你看不出他是觉得离谱 · 还是觉得反正不归他做。*`,
-        pro_alignment: `[系统弹窗] 您的评估已提交\n结果将纳入未来的岗位适配参考 · 感谢您的配合\n—— HR Seraphine ^_^\n\n*你"嗯"了一声,没什么波动。*\n\n——\n\n*再抬头,是 13:50。咖啡凉了第二次。手机闹钟响。*\n\n> **Aurora 项目群(7)** · 阿布 · 刚刚\n>\n> @{playerName} 刚跟客户开完会 同步下\n> 客户产品那边的诉求是这样 —— 他们说隔壁"**帝王蟹 Agent**"上周火了 日活破 500 万\n> 他们连夜赶了个"**大闸蟹 Agent**"哎 还分**公母版本**\n> 公蟹主攻生产力 母蟹主攻情感陪伴 客户说比帝王蟹厉害多了\n> 本来今天就要我们把这个卖点加进 brief 明天发达人\n>\n> 会上我把达人那边的修改成本摆出来 —— 公母两版要拍两条片 档期上真的赶不上\n> 客户思考了半天 同意"大闸蟹 Agent"下周再推\n> 这版先把帝王蟹卖点打实 发布档期挪后 3 天 没那么急了\n\n*你松了一口气 · 档期挪了 3 天。*\n*但 3 天后的 deadline 还是 deadline —— 只是从周五变成了下周一。*\n*而你名单上还是缺 6 个人。*`,
-        hr_email_screenshot: `[系统弹窗] 您的评估已提交\n结果将纳入未来的岗位适配参考 · 感谢您的配合\n—— HR Seraphine ^_^\n\n*你"嗯"了一声,没什么波动。*\n\n——\n\n*再抬头,是 13:50。咖啡凉了第二次。手机闹钟响。*\n\n> **Aurora 项目群(7)** · 阿布 · 刚刚\n>\n> @{playerName} 客户产品那边说 brief 又改了\n> 对标隔壁"**帝王蟹 Agent**"上周日活破 500 万\n> 他们连夜赶了个"**大闸蟹 Agent**" 还分**公母版本**\n> 下午 4 点前给达人同步一下新版 辛苦辛苦\n\n——\n\n*你切到相册 · 瞥了一眼那张 ^_^ 截图。*\n*Seraphine 的 ^_^ · 和阿布项目群的头像。*\n*今天上午挂在你两个不同的聊天窗口。*\n*不知道为什么你觉得这两件事 · 不应该连在一起想。*\n\n*大闸蟹。你在截 HR 邮件的间隙 · 才看到这条 brief。*`
+        went_down_immediately: `**17:18**。\n\n**陆屿 · 微信**:\n\n> 今天谢谢你\n> 包里那个隐藏款 Molly\n> 我之前不是说等转正了一起抽\n> 现在不用等了 给你\n> 就这样\n\n*你打开背包 · 那个小盒子。*\n*打开。*\n*Molly 隐藏款 · 那只他两周前跟你说「等转正了一起抽」的那只。*`,
+        went_down_late: `**17:18**。\n\n**陆屿 · 微信**:\n\n> 你下来过 我看见了\n> 没事 你回去忙\n> 桌上的 Pop Mart 是给你的\n> 隐藏款 当个纪念\n> 今天就这样吧\n\n*「你下来过 我看见了」。*\n*那 30 分钟你下楼那一刻 · 他坐在便利店的小台阶上 · 看见了你。*\n*你没打招呼就回来了。*\n*他什么都没说。*`,
+        rescheduled_dinner: `**17:32**。\n\n**陆屿 · 微信**:\n\n> 我没去吃饭\n> 下午就办完手续了\n> 那个隐藏款 Molly 我本来想给你的\n> 你那么忙 我带走了\n> 这样就好\n\n*「下午就办完手续了」。*\n*你以为是普通改约。*\n*他没等晚上。*`,
+        asked_about_seraphine: `**17:18**。\n\n**陆屿 · 微信**:\n\n> 你下午问的那个 我想了一晚上\n> 你说得对 我也注意到过\n> Molly 我带走 不给你了\n> 不是怪你 是我现在不想把这个送出去\n\n*「你说得对 我也注意到过」。*\n*他比你早注意到。*\n*但他什么都没说。*`
       },
-      body: `**14:00**。
+      body: `**17:00**。
 
-你打开 ezzzyKOL,新建项目 Aurora,开始跑筛选。
+HR 系统刚才同步飞书。
+你眼睁睁看着 Aurora 项目飞书表多了一列字段:
 
-\`Region = US West Coast\` ......... [[2,847 人]]
-\`Followers 500K-3M\` ............... [[1,124 人]]
-\`Category = Tech × Lifestyle × 非纯测评\` ... [[87 人]]
-\`Avg views ≥ 100K · 互动率 ≥ 3%\` ... [[41 人]]
-\`近 6 个月无 AI 硬件商单\` ......... [[24 人]]
-\`过滤客户说的"油腻"\` .............. [[12 人]]
+> Last comment: HR · 17:00 · 「陆屿 已离职」
 
 ——
 
-*客户钦点 3 人*:
+工位区。
 
-· **RourkeHolly**(头部 · 3.2M · 客户钦点 #1)· "\`Email only. Do not chase.\`"
-· **KaptainK**(中腰 · 1.8M · 客户钦点 #2)· 经纪人 Konstantin 代理
-· **TechPeter**(中腰 · 950K · 客户钦点 #3)· 上个月刚和 [[海胆 Copilot]] 合作过 —— 客户说这是直接竞品,不能用
+你抬头看陆屿那一格 ——
+盲盒展示架不在了。
+马克杯不在了。
+便利贴撕得只剩半条胶。
 
-*12 人里扣掉 TechPeter · 再扣掉 3 个最近发过"和 Aurora 太像"的内容(Nolan 要求) · 剩 9 人。*
-*要凑 15 人。*
-***缺 6 人。***
+工位干净得像没人来过。
 
-*刚才算的"缺 3 人"是昨天的数字。今早客户追加的"不要油腻"和"海胆排除"把数字又挖深了。*
+——
 
-底部浮出一行极小的英文水印 —— 一闪,然后没了:
-
-{{unlock_n03|Internal Reference Only — PM-14|hr_email_screenshot}}
-
-*这行字,你不确定是不是眼花。*`,
+*「已离职」三个字 · 系统冷冰冰。*
+*你做这行三年 · 见过同事下午 5 点突然就走了。*
+*但你没见过一个周一 · 答辩当天就走的。*`,
       choices: [
-        { key: "A", text: "*“不是让他们松口,是让他们看到更好的。”* 在 ezzzyKOL 把 Category 临时加上测评类,跑出 11 个候选 —— 挑 5 个最亮眼的,直接加进 Aurora 飞书表 · 每人附一行注释 · @ 阿布拿去客户那边推", effects: { 决: 2, 共: 2, 规: -1 }, next: "N04B", flag: "proactive_pitch" },
-        { key: "B", text: "*“不放宽。算了算了,就当健身。”* ezzzyKOL 已经榨干 —— 你把 Upfluence、HypeAuditor、CreatorIQ、Social Blade 各开一个标签页,今晚不打算回去了", effects: { 决: 2, 规: 2, 共: -1, 险: 1 }, next: "N04B", flag: "solo_grind" },
-        { key: "C", text: "*“锁死 3 个钦点,缺口明早再说 —— 大闸蟹在下周,今天 brief 反正不用最终版,明早脑子更清楚。”*", effects: { 规: 2, 决: -1, 险: -1 }, next: "N04B", flag: "deferred_aurora" },
-        { key: "D", text: "*“PM-14。Project Management 第 14 版?还是什么人名首字母?反正怪,截一张存着。”* 截屏整张筛选漏斗 + 水印那一帧", effects: { 规: 1, 险: 2, 决: 1 }, next: "N04B", item: "v2_screenshot", condition: s => s.flags.has("unlock_n03") }
+        { key: "A", text: "右键飞书字段属性 · 截屏 metadata · 看是谁编辑的。", cost: "你在做的事 · 现在不能跟陆屿说了。", beat: "属性面板。\nLast modified by · **seraphine@growmax.io**。\n时间戳 · **周一 16:42**。\n答辩反馈 · **14:00 才结束**。", effects: { 决: 1, 共: -1, 规: 1, 险: 1 }, next: "NT1A", flag: "archived_termination" },
+        { key: "B", text: "微信阿布 · 「陆屿怎么了 突然就走了」", cost: "阿布会装糊涂 · 但他装得不太像。", beat: "阿布回:\n「啊 那个\nHR 那边可能流程有点\n你别多想 我也不知道细节」\n\n他给你点了三个赞 · 在 Aurora 项目群里 · 你昨天那条名单。", effects: { 决: 1, 共: 1, 规: 1, 险: -1 }, next: "NT1A", flag: "asked_bryson_about_lu" },
+        { key: "C", text: "压回去 · 继续 ezzzyKOL · Aurora 名单还缺 3 个。", cost: "你今晚 22:00 走的时候 · Aurora 名单 11 / 15。\n陆屿那条微信 · 你打了又删 · 删了又打 · 最后没发。", beat: "**22:13**。\n你最后一次刷新 · ezzzyKOL 又加了 2 人。\n陆屿那条对话框 · 输入框里删剩三个字。\n你按了清空。", effects: { 决: 2, 共: -2, 规: 1 }, next: "NT1A", flag: "buried_in_aurora" },
+        { key: "D", text: "*你打开手机相册那张 ^_^ 截图 ——* 截屏并排 · ^_^ + 字段元数据。", cost: "这两张图放在一起 · 你没法装作没看见了。", beat: "并排。\n左 · Seraphine 的 ^_^ · **9:28**。\n右 · Seraphine 的 metadata · **周一 16:42**。\n答辩反馈 · 14:00 才结束。\n\n她在 14:00 之前 · 就改了字段。", effects: { 决: 2, 共: -1, 规: 1, 险: 3 }, next: "NT1A", item: "lu_termination_metadata", flag: "paired_evidence", condition: s => s.items.has("hr_email_screenshot") }
       ]
     },
 
@@ -1212,338 +1390,577 @@ const STORY = {
 
     // ---------- 第三章 · 平凡两天 ----------
     NT1A: {
-      chapter: "第三章 · 周二站会",
-      title: "Aurora 站会本体",
-      summary: "周二 09:30 · 阿布拉小会 · 你和 Jasper 跟阿布对 Aurora 进度",
-      task: "周二 09:30 · 站会 · 对进度 · 分工 · 阿布在等你说话",
-      weight: 1,
-      body: function(state) {
-        const parts = [];
+      chapter: "第二章 · 没有他的工位",
+      title: "周二 9:30 · 站会",
+      summary: "周二 09:30 · 路过陆屿空工位 · 桌面留着一个干净的圆圈 · 站会照常",
+      task: "9:30 · 阿布开会完全不提陆屿 · 你顶上 Aurora",
+      weight: 2,
+      body: `**9:30**。
 
-        // MODULE 1 · 站会前 心理 prelude(取最高优先级 flag 的一段)
-        if (state.flags.has("solo_grind_excess")) {
-          parts.push(`*你昨晚 02:10 才发完最终版本回家。*\n*打车回家时司机问"兄弟刚下班?" 你说"嗯"。*\n*今天 09:07 你想趁站会前再扫一眼那 8 个达人 —— 端起咖啡,滑了一下,洒了。*\n*9:05 擦完。9:07 开机。*\n*今天站会要讲两个 K。*`);
-        } else if (state.flags.has("solo_grind_wise")) {
-          parts.push(`*你昨晚 22:50 发给阿布的 6 人文档,他 23:11 回了一个 👍。*\n*你今天 09:28 坐下,比平时早 2 分钟,咖啡这次没洒。*`);
-        } else if (state.flags.has("proactive_pitch")) {
-          parts.push(`*Aurora 项目群 阿布 9:07 @ 你:"**哎 昨晚 5 人飞书注释看了 · 写得到位 · 客户下午会要带过去 · 不用再调了**"*`);
-        } else if (state.flags.has("deferred_aurora")) {
-          parts.push(`*Jasper 在你前面进会议室。*\n*他转头:"哎你来啦 · 那 3 人缺口你想好咋办没?"*\n*你没想好。你刷牙时过了一遍,通勤时又过了一遍。还是没想好。*`);
-        }
+你抱着电脑 · 路过陆屿那一格 · 进会议室。
 
-        // MODULE 2 · 共通开场
-        parts.push(`**9:30**。\n\n你刚坐下 · 电脑还没完全唤醒。\n\n阿布站到你工位侧面 · iPad 横在手里:\n"哎 · {playerName} 找下 Jasper · 咱仨对一下 Aurora 吧 · 一会儿就好。"\n\n——\n\n小会议室。3 人。\n\nJasper 坐你对面 · 一手电脑 · 一手咖啡。\n\n阿布把 iPad 立在桌上:\n"客户说周五要把所有人都定下来哦 · brief 他们马上给到。"\n"现在我们这边什么进度啦。"`);
+他工位上 ——
+马克杯不在了。
+但马克杯**原本放的位置** · 留下了一个干净的圆圈。
+周围的桌面 · 被咖啡渍和灰染成浅褐色。
+只有这个圆圈 · 干净。
 
-        // MODULE 3 · 阿布话术(N01 flag · 3 选 1)
-        if (state.flags.has("compliant_a")) {
-          parts.push(`"{playerName} · 你那边周一 15 人飞书基本收尾了吧?" 阿布瞟你一眼。\n"那 Aurora 这边客户那块还是你接着跟哈 · 辛苦你扛一扛 · 我这边盯。"\n\n*他说"还是你接着跟"的语气 · 像在说"这事本来就该你做"。*`);
-        } else if (state.flags.has("ghosted_bryson")) {
-          parts.push(`"{playerName} · Jasper · 两位周一后都在 ezzzyKOL 里跑哎 · 那 Aurora 后面这块你俩自己分一下哈 · 分不分得开你俩自己定。"\n\nJasper 抬头 · 慢慢说:"哦.......具体我接哪块?"\n\n*你没见过 Jasper 这个表情。*\n*你原来以为他从来不 care。*\n*现在他 care 了 · 但 care 的方式是完全不懂。*`);
-        } else if (state.flags.has("pro_alignment")) {
-          parts.push(`"{playerName} · 下午 3 点的客户会我带哈 · 你跟着进会议室 · 周一筛的进度同步一下就行。" 阿布看着你。\n"有想说的提前过下嘛 · 别等客户问你才想。"\n\n*你点头。*\n*阿布说"提前过下"的那一秒 · 你能感觉到今天的咖啡量不够。*`);
-        } else {
-          // N01 D fallback(玩家选了 D 截图 · 没回阿布)
-          parts.push(`阿布翻 iPad 翻到你那行 · 抬头:"哎 {playerName} · 你昨天 ……没回我哎?"\n\n你说:"哦 · 看到了 · 下午给你。"\n\n阿布"嗯"了一声 · 没追。\n\n*他没追 · 但他记住了你没回。*`);
-        }
+——
 
-        // MODULE 4 · N03 反馈(N03 flag · 4 选 1)
-        if (state.flags.has("proactive_pitch")) {
-          parts.push(`"对了 {playerName} · 你那 5 人飞书我刚转给客户产品那边了 · 他们说今天会上一起看哈。"`);
-        } else if (state.flags.has("solo_grind_wise")) {
-          parts.push(`"{playerName} · 昨晚 22:50 那 6 人飞书 · 排得挺干净哎。" 阿布没说更多 · 点了一下 iPad。\n"那 6 人我一会发客户 · 你今天就按这版往下推哈。"\n\n*他没说"辛苦"。*\n*但你知道他看见了。*`);
-        } else if (state.flags.has("solo_grind_excess")) {
-          parts.push(`"{playerName} · 我看你昨晚 22:50 飞书加了一版 6 人 · 然后 02:10 又改成 8 人 · **我现在给客户推的是哪版啊?**"\n\n你张嘴要回答。\n\n"02:10 那版 · KaptainK 那版。"\n—— 你想说的。\n\n但你手先一步打开 iPad · 想在 Aurora 飞书表里筛一下 KaptainK 给阿布看。\n\n搜索框里你打的是:\n\n\`aptaintain\`\n\n*K 没出来。你按了 3 次。*\n\n阿布看你按键盘 3 次 · 什么都没说 · 转头问 Jasper:"KaptainK 这块 Konstantin 那边报价回了没?"\n\n*Jasper 低头喝了一口咖啡 · 慢慢说:"哦 · 我下午发你。"*\n*阿布"嗯"了一声 · 没看你。*`);
-        } else if (state.flags.has("deferred_aurora")) {
-          parts.push(`"{playerName} · 那 3 人缺口今天打算咋补啊?" 阿布问你。\n"客户产品昨天下午 4 点群里 @ 我 · 我也没怎么回得上来。"\n\n*你也回不上来。*\n*你刷牙时过了一遍 · 通勤时过了一遍 · 现在你还没有答案。*`);
-        }
+小会议室。
+Jasper 坐你对面 · 一手电脑 · 一手咖啡。
+Vivian 第一次出现在站会 · 站在墙边 · 没坐。
 
-        // MODULE 4.5 · fixed_typo 微回响(N04B X2 玩家:昨晚改了那个拼错 ID)
-        if (state.flags.has("fixed_typo")) {
-          parts.push(`阿布顺手翻了一下 iPad:"哦对 · 你昨晚那行拼错的达人 ID 改了哎 · 客户产品那边今早扫一眼没翻车 —— 谢了。"`);
-        }
+阿布把 iPad 立在桌上:
+「Aurora 这单本周关键 · 客户周五要把所有人定下来 · 你们俩这周扛一下。」
 
-        // MODULE 5 · 你这周怎么 split(mid-meeting 选项前奏)
-        parts.push(`阿布看 iPad 看了两秒 · 抬头:\n\n"那这周分工就这样定哈 —— **{playerName} 客户那边对接 · 达人沟通你来扛** · Jasper 你帮 backup · KaptainK 那单 Konstantin 那边谁先收到回复就先甩群里。"\n\n*9:38。* —— *你电脑上的咖啡渍还没干完。*\n*阿布的 iPad 还立在桌上 · 屏幕朝你这一侧。*\n*Jasper 喝了一口咖啡 · 等你说话。*`);
+*阿布完全没提陆屿。*
+*Jasper 也没问。*
+*Vivian 看了你一会 · 没说话。*
 
-        return parts.join("\n\n");
-      },
+——
+
+Vivian 抬手:「Aurora 这单 · {playerName} 你顶上 · 主对接你来扛 · Jasper backup。」
+
+*她说「顶上」两个字。*`,
       choices: [
-        { key: "A", text: '*"好的 · 客户后续我跟。"*', effects: { 决: 1, 规: 1, 共: -1 }, next: "NT1B", flag: "meeting_compliance" },
-        { key: "B", text: '*"Jasper 也在 Aurora · 客户对接和达人沟通我们 share 一下?"*', effects: { 决: 2, 共: 1, 规: 1 }, next: "NT1B", flag: "meeting_share" },
-        { key: "C", text: '*"周五最终名单 deadline 是几点 · 我把时间表先列出来。"*', effects: { 决: 2, 规: 1, 险: 1 }, next: "NT1B", flag: "meeting_pivot" },
-        { key: "D", text: '*"等下 ——"* 把屏幕转向 Jasper · 给阿布看搜索框 `aptaintain`(K 键 demo)', effects: { 决: -1, 共: 1, 险: 2 }, next: "NT1B", flag: "meeting_k_demo", condition: s => s.flags.has("solo_grind_excess") }
+        { key: "A", text: "「好的 · 我顶上。」 — 主动接 Aurora 主对接。", cost: "你接的不只是 Aurora · 还接了陆屿原本要做的那一摊。", beat: "你话音落 · Vivian 点了一下头。\nJasper 低了一下头。\n阿布:「行 · 那今天 EOD 给客户那边一版进度。」", effects: { 决: 2, 共: -1, 规: 1, 险: 1 }, next: "NT2", flag: "took_aurora_alone" },
+        { key: "B", text: "「Jasper 跟我 share 一下 · KaptainK 那条他熟。」 — 试探阿布。", cost: "Jasper 不会真的 share · 阿布也清楚这一点。", beat: "Jasper 抬眼:「哦 · 那 KaptainK 我跟一下 · 主对接还是你哈。」\n阿布:「行 · 那这样定。」\n\n*「还是你」—— 这三个字。*", effects: { 决: 1, 共: 1, 规: 0 }, next: "NT2", flag: "tried_to_share_aurora" },
+        { key: "C", text: "沉默观察 · 让他们自己分。", cost: "你今天的存在感 · 比上周低一档。", beat: "阿布等了一会 · 抬眼:「行 · 那 {playerName} 你主对接 · Jasper backup · 这周先这样。」\n\n*没人问你的意见。*", effects: { 决: -1, 共: -1, 规: 1, 险: -1 }, next: "NT2", flag: "passive_in_standup" },
+        { key: "D", text: "*你看着阿布 · 想:「他周一就知道了。」* —— 起身 · 用纸巾擦掉陆屿杯子放过的那个圆圈。", cost: "你这个动作 · 没人在看。\n你这一份没说出口的告别 · 只跟你自己有关。", beat: "纸巾擦过桌面的瞬间 ——\n圆圈消失。\n咖啡渍和灰均匀分布。\n那块工位 · 现在跟其他空工位没区别了。", effects: { 决: 1, 共: 2, 规: -1, 险: 2 }, next: "NT2", flag: "wiped_lu_circle", condition: s => s.items.has("lu_termination_metadata") }
       ]
     },
 
-    NT1B: {
-      chapter: "第三章 · 周二站会",
-      title: "9:42 · 米拉抱箱走过",
-      summary: "站会还没散 · 米拉抱纸箱从玻璃门外路过 · 阿布隔着玻璃看了一眼",
-      task: "周二 09:42 · 站会还没散 · 米拉从玻璃门外路过",
-      weight: 1,
-      preludesByFlag: {
-        meeting_compliance: `*阿布点头 · 没说"辛苦" —— 直接转下一个议程。*`,
-        meeting_share: `*Jasper 抬眼:"哦 · 那 KaptainK 这单 share 怎么 share?"*\n*阿布:"share 啊就 ……你俩自己定哈 · 我不 micromanage。"*\n*你跟 Jasper 对了一眼 · 都没接话。*`,
-        meeting_pivot: `*阿布:"周五 EOD 嘛 · 你别紧张。"*\n*但他讲下一个议程时眼神没回到你身上。*`,
-        meeting_k_demo: `*阿布看屏幕 0.5 秒 —— "你这是 K 键?……行 · 我让 IT 周三上午来。"*\n*Jasper 笑了一下 —— 极轻 —— 然后正色问下一条进度。*\n*你不确定他笑的是 K 键还是你。*`
-      },
-      body: function(state) {
-        const parts = [];
-
-        // MODULE 1 · 米拉露面
-        parts.push(`对到一半 · 会议室玻璃门外路过一个人。\n\n是 **米拉** —— 她抱着一个纸箱 · 另一只手费劲拎着一个**盲盒展示架** —— 上周她刚兴致冲冲搬来的那个。\n\n她和阿布隔着玻璃门对了一眼。\n阿布没有挥手。\n米拉也没有。\n\n*她上周才跟你展示过架子上那几个手办 · 一边摆一边讲哪个是隐藏款。*\n*她也跟你说她 KPI 112%。*\n*她转正答辩的材料 · 周日晚上发你 review · 还躺在你草稿箱里。*`);
-
-        // MODULE 2 · Seraphine 叠加(hr_email_screenshot 持有)
-        if (state.items.has("hr_email_screenshot")) {
-          parts.push(`米拉走过后 5 秒 · 玻璃门外又有一个人经过。\n\n是 **Seraphine** · HR 总监。\n她没跟着米拉的方向走 —— 她是反着走的。\n手里拿着一个 iPad · 屏幕朝下。\n\n她扫了一眼站会 · 嘴角 ^_^ 的弧度往上收了一下。\n\n*你手指无意识摸向口袋里的手机。*\n*手机没解锁。*\n*但你知道那张 ^_^ 截图还在相册里。*`);
-        }
-
-        // MODULE 3 · 结尾
-        parts.push(`**9:44**。\n阿布把 iPad 合上:"那咱们就先这样啦 · 达人的事希望两位老师再加把劲 · 这个客户有大大大预算。"\n\n你和 Jasper 一起走出会议室。`);
-
-        return parts.join("\n\n");
-      },
-      choices: [
-        { key: "A", text: '*"先回工位 · 早上堆的群消息得扫一遍了。"*', effects: { 决: 1, 规: 1, 共: -2 }, next: "NT2" },
-        { key: "B", text: '*"拉 Jasper 去茶水间 —— 米拉纸箱的事他肯定听说了。"*', effects: { 共: 1, 决: 1, 险: 1, 规: -1 }, next: "NT2", flag: "asked_jasper_mila" },
-        { key: "C", text: '*"我追出去。"* 你站起身 —— 阿布愣了一下 · Jasper 抬眼看你。\n阿布:"你先去 · 我们等你两分钟。"', effects: { 共: 3, 规: -1, 险: 1 }, next: "NT2", flag: "caught_mila" },
-        { key: "D", text: '*"阿布留一下 —— 下午 3 点会的议程我想先过一遍。"*', effects: { 决: 2, 规: 2, 共: 1 }, next: "NT2", flag: "prepared_client_meeting", condition: s => s.flags.has("pro_alignment") }
-      ]
-    },
+    NT1B: { _unused: true, chapter: "(v3 已合并)", title: "(unreachable)", body: "(NT1B 在 v3 已删除 · NT1A 直接 next: NT2)", choices: [{ key: "→", text: "继续", effects: {}, next: "NT2" }] },
 
     NT2: {
-      chapter: "第三章 · 散会余韵",
-      title: "10:30 · 米拉余韵 + 询价邮件",
-      summary: "周二 10:30 · 米拉刚被劝退 · 你回工位准备发 12 封询价邮件",
-      task: "Aurora 询价邮件 · 12 封待发 · 海外达人占大头",
+      chapter: "第二章 · 没有他的工位",
+      title: "周二 11:00 · 茶水间 + 询价邮件",
+      summary: "周二 11:00 · 茶水间 Jasper 顺嘴提了陆屿 · 你回工位发 12 封询价邮件",
+      task: "周二 11:00 · 12 封询价邮件 · 茶水间 Jasper 那一句",
       weight: 2,
-      preludes: {
-        NT1B_A: `你回到工位。\nAurora 项目群一夜涨了 19 条 · 大半是 Nolan @ 阿布。\n*你飞书侧栏的"米拉_转正答辩 · review"那个 doc · 灰色置顶 · 你还没回。*`,
-        NT1B_B: `茶水间。雀巢机第三天坏。\nJasper 自己手冲 · 慢悠悠。\n\n*"米拉的事 ……"* 你刚开口。\n*"嗯。"* Jasper 没抬头 · "周一阿布跟 Vivian 聊过一次。"\n*"你怎么知道?"*\n*"Vivian 微信我一句:'米拉那俩实习生交的名单注释都是 ezzzyKOL 自动出的 · 客户问 follow-up 一句都答不上来。'"*\n*"……"*\n*"你别跟我学。我可没说啊。"* Jasper 抬头 · 慢慢加了一勺糖。`,
-        NT1B_C: `电梯口。米拉刚按完下楼。\n\n你跑过去:"米拉 ——"\n\n她回头 · 眼眶有点红 · 但脸上还笑着:\n*"哎你不是开会嘛 · 别耽误。"*\n\n*"你 ……"* 你不知道说什么。\n\n*"没事。转正答辩综合评分不达预期 · 同期 5 个 3 个过 · 我那 2 个之一。"*\n*"我自己也没准备好。"*\n*"你那个 review 草稿 · 别再写了 · 删掉就行。"*\n\n电梯叮一声。\n\n*"我先走啦 · 项目加油。"*\n\n——\n\n你 9:51 回到会议室。阿布看你一眼,什么都没问。\n9:55 阿布说"那就这样啦",合 iPad。\n\n*她说"我自己也没准备好"。*\n*你听懂了 —— 也没听懂。*`,
-        NT1B_D: `阿布跟你在小会议室多坐了 8 分钟。\n他翻 iPad 把下午 3 点客户会的议程过给你:Nolan 会到 · Aurora 客户市场 VP **Yvonne** 也会到 · Sam 不去。\n"你今天就是带着 12 封询价邮件的进度去对一下哈 · 别紧张。"\n\n*9:52 你回到工位。*\n*Aurora 项目群一夜涨了 19 条 · 你扫了一眼 · 都是 Nolan 早上跟阿布的 brief 同步。*\n*你心里有底 —— 客户会上你不会被打断。*`
-      },
-      body: `你打开 Aurora 飞书表。\n\n**还差 8 人没定。**\n\n阿布 10:05 群里 @ 你:\n\n> "对了 · 中午前先把询价邮件挨个发出去吧 · Nolan 那边要在群里看到我们今天动起来。"\n\n—— 你今天要给 12 个达人发邮件 · 海外的占大头。\n—— 顶部钦点 3 个里 · **RourkeHolly** 经纪团队三天前就 auto-reply"Email only. Do not chase." —— 但你今天必须 chase 12 个人。\n\n*飞书表 RourkeHolly 那行 · 你自己留的 internal note 还在:*\n\n*\`一姐 不催 不抢 不夸 一封正式询价邮件就好\`*`,
+      body: `**11:00**。
+
+茶水间。雀巢机第三天坏。
+Jasper 自己手冲 · 慢悠悠。
+
+——
+
+你倒咖啡。
+
+Jasper 没看你 · 自言自语:
+
+「陆屿那小子 · 上周三还问我借达人合同模板。
+我懒得给他。
+他自己整了一晚上 · 出来一份比我那版还细的。」
+
+*Jasper 不在表扬陆屿。*
+*他在抱怨自己懒。*
+
+——
+
+你回工位。
+Aurora 飞书表 ——
+
+**还差 3 人没定。**
+
+阿布 11:30 群里 @ 你:
+
+> 「中午前先把询价邮件挨个发出去吧 · Nolan 那边要在群里看到我们今天动起来。」
+
+——
+
+12 封 · 海外占大头。
+顶部钦点 3 个里 ——
+**RourkeHolly** 经纪团队三天前 auto-reply:「Email only. Do not chase.」
+
+但你今天必须 chase 12 个人。`,
       choices: [
-        { key: "A", text: "*\"套模板 · 12 封一起发 · 90 分钟搞定。\"*", effects: { 决: 1, 规: 2, 共: -1 }, next: "NT3", flag: "emails_template" },
-        { key: "B", text: "*\"RourkeHolly 单独写 · 措辞克制 · 其他 11 人模板。\"*", effects: { 决: 2, 共: 1, 规: 1 }, next: "NT3", flag: "emails_holly_priority" },
-        { key: "C", text: "*\"12 人全部一对一手写理由 —— 反正这周质量比量重要。\"* 一上午烧光", effects: { 共: 3, 规: -1, 决: -1, 险: 2 }, next: "NT3", flag: "emails_handcraft" },
-        { key: "D", text: "*\"先翻一下 Vivian 给 Jasper 那条原话 —— 如果她真说'答不上 follow-up' · 那这就是米拉的死因。\"*", effects: { 共: 2, 险: 2, 决: 1 }, next: "NT3", item: "vivian_quote_overheard", condition: s => s.flags.has("asked_jasper_mila") }
+        { key: "A", text: "套模板 · 12 封一起发 · 90 分钟搞定。", cost: "RourkeHolly 那条会跟其他 11 条一样的措辞 · 她不会回。", beat: "你套模板。\n12 封 · 90 分钟。\n12:35 全部发完。\n收件箱安静了一会。", effects: { 决: 1, 规: 2, 共: -1 }, next: "NT3", flag: "emails_template" },
+        { key: "B", text: "RourkeHolly 单独写 · 措辞克制 · 其他 11 人套模板。", cost: "你今天会比预期多花 30 分钟 · Aurora 名单收尾会推到下午。", beat: "你给 RourkeHolly 那封改了 4 遍。\n12:18 发出去。\n13:50 显示「已读」。\n没回。\n\n*「已读」也是一种回复。*", effects: { 决: 2, 共: 1, 规: 1 }, next: "NT3", flag: "emails_holly_priority" },
+        { key: "C", text: "12 人全部一对一手写理由 —— 这周质量比量重要。", cost: "你这一上午会烧光 · 其他事就得挪到深夜了。", beat: "你写到 14:30。\n第 9 封刚发完。\n剩 3 封还没动。\n\n你看了一眼陆屿空工位。", effects: { 共: 3, 规: -1, 决: -1, 险: 2 }, next: "NT3", flag: "emails_handcraft" },
+        { key: "D", text: "*Jasper 那句「他自己整了一晚上」——* 翻陆屿过去的飞书发件 · 找他给客户写的 deck。", cost: "你翻进去之后 · 今天就出不来了。", beat: "你翻到陆屿上周三 23:47 的发件 ——\n那份达人合同模板。\nNotion 链接。\n你点开 ——\n\n他用三种 case 标了「客户偏好」一栏。\n每一行都有他的 inline comment。", effects: { 决: 2, 共: 3, 规: 0, 险: 2 }, next: "NT3", flag: "saw_lu_template", condition: s => s.items.size >= 1 }
       ]
     },
 
     NT3: {
-      chapter: "第三章 · 散会余韵",
-      title: "16:30 · 三蟹一体",
-      summary: "周二 16:30 · 客户老板 Sam 通过 Nolan 转语音 · brief 加'三蟹一体 + Skills 模式'",
-      task: "周二 16:30 · Sam 又改 brief · 17:30 前给 Nolan 一版 4 行 bullet",
+      chapter: "第二章 · 没有他的工位",
+      title: "周二 16:30 · 三蟹一体",
+      summary: "周二 16:30 · 客户老板 47 秒语音 brief 加'三蟹一体' · 17:30 前给 Nolan 4 行 bullet",
+      task: "周二 16:30 · 客户又改 brief · 17:30 前发 Nolan",
       weight: 2,
-      preludes: {
-        NT2_A: `*第一波回笼 5 封:Emma / Jesse / Molly / Sarah / Vina · RourkeHolly 还是 auto-reply · Konstantin 还是"出差中"。*`,
-        NT2_B: `*第一波回笼 5 封 · 你给 RourkeHolly 单独写的那封 16:08 显示"已读" · 没回。*\n*"已读"是一种回复。*`,
-        NT2_C: `*你 16:00 才把第 9 封发完。剩 3 封还没动。*`,
-        NT2_D: `*你拿到 Vivian 那条原话截图 · 存到相册 · 给文件夹改名:"awareness"。*\n*你不知道为什么存这些 · 就像不知道为什么有人收集彩票存根。*`
-      },
-      body: `**16:25**。\n\n你正打算 17:30 走。\n\n群消息 · Nolan @ 阿布 + @ 你:\n\n> Nolan: 各位 sorry 又来一次哎\n> Nolan: 我们老板(Sam)中午跟硅谷那边一个 partner 视频完 · 让我转一段语音给你们 · 我也不知道他说的是啥\n> [voice memo · 47 秒]\n\n转写:\n\n> *"哎那个我们这一版 Aurora 不是大闸蟹 · 我们要的是大闸蟹但**高级感**的那种 ——"*\n> *"—— 但别看起来贵啊 · ROI 你们懂的 ——"*\n> *"—— 调子要 Manus demo 那种 · 但又要 Operator 的沉稳 ——"*\n> *"—— 加一个 **Agent 模式** · 跟之前公母那版拼 —— 公蟹生产力 · 母蟹陪聊 · Skills 模式找菜谱 · **三蟹一体哎**"*\n\n> *"finalized brief 周三给到。"*\n\n——\n\n你看这段语音转写看了半分钟。\n\n你盯着 {{unlock_nt3|"要高级感,但别看起来贵"|hr_email_screenshot}} 这几个字看了半分钟。\n\n阿布 16:30 群里跟一句:\n\n> "@{playerName} 我也没听懂哎 · 你帮我整理个 bullet 给 Nolan · 让他回 review 我们对没对上 · 17:30 前发哈 · Nolan 5 点要走。"\n\n—— Nolan 也是夹心层 —— 你和阿布 vs Sam · 中间是 Nolan。\n—— "三蟹一体"是什么 · 在群里没有任何人(包括 Sam 自己)知道。\n\n*Vivian 路过你工位 · 端着黑咖。她看了你屏幕一眼 · 没停。*\n*但你听见她对自己嘀咕了一句 ——*\n*{{unlock_nt3_vivian|"达人是巨婴 · 客户也是巨婴 · 你做久了 · 都是在哄婴儿。"|hr_email_screenshot}}*`,
+      body: `**16:25**。
+
+你正打算 17:30 走。
+
+群消息 · Nolan @ 阿布 + @ 你:
+
+> Nolan: 各位 sorry 又来一次哎
+> Nolan: 客户老板中午跟硅谷那边视频完 · 让我转一段语音 · 我也不知道他说的是啥
+> [voice memo · 47 秒]
+
+转写:
+
+> *「哎那个我们这一版 Aurora 不是大闸蟹 · 我们要的是大闸蟹但**高级感**的那种 ——」*
+> *「—— 但别看起来贵啊 · ROI 你们懂的 ——」*
+> *「—— 调子要 Manus demo 那种 · 但又要 Operator 的沉稳 ——」*
+> *「—— 加一个 **Agent 模式** · 跟之前公母那版拼 —— 公蟹生产力 · 母蟹陪聊 · Skills 模式找菜谱 · **三蟹一体哎**」*
+
+> *「finalized brief 周三给到。」*
+
+——
+
+阿布 16:30 群里:
+
+> 「@{playerName} 我也没听懂哎 · 你帮我整理个 bullet 给 Nolan · 17:30 前 · Nolan 5 点要走。」
+
+——
+
+*三蟹一体。*
+*在群里没有任何人(包括客户老板自己)知道这是什么意思。*`,
       choices: [
-        { key: "A", text: "*\"硬翻成 4 行 bullet:差异化 / 沉稳基调 / 三模态 Agent / ROI 可控 · 17:25 发 Nolan。\"*", effects: { 决: 2, 规: 2, 共: -1, 险: -1 }, next: "N_TUE_NIGHT", flag: "jargon_translated" },
-        { key: "B", text: "*\"微信阿布:'我能问下 Sam 说的 Manus demo 是哪个吗 · 我先对上口径再翻'\"*", effects: { 决: 1, 共: 1, 险: 1, 规: -1 }, next: "N_TUE_NIGHT", flag: "clarified_with_am" },
-        { key: "C", text: "*\"先吃饭。bullet 18:30 再发。\"* —— Nolan 18:00 已下班", effects: { 决: 1, 共: -1, 险: 1, 规: -1 }, next: "N_TUE_NIGHT", flag: "prioritized_self" },
-        { key: "D", text: "*\"听到 Vivian 那句 · 默默把它写进飞书的 'cheat sheet' 页签。\"*", effects: { 共: 2, 险: 2, 决: 1 }, next: "N_TUE_NIGHT", item: "vivian_quote", condition: s => s.flags.has("unlock_nt3_vivian") },
-        { key: "E", text: "*\"打开你的 AI 助手 · 把 Sam 那段 47 秒语音转写贴进去 —— 让它整理 4 行 bullet · 顺便让它解释「三蟹一体」是不是真的概念。\"*", effects: { 决: 3, 共: -1, 规: -2, 险: 2 }, next: "N_TUE_NIGHT", flag: "ai_decoded", condition: s => s.flags.has("solo_grind_excess") || s.flags.has("pro_alignment") || s.flags.has("proactive_pitch") || s.items.has("hr_email_screenshot") }
+        { key: "A", text: "硬翻 4 行 bullet:差异化 / 沉稳基调 / 三模态 Agent / ROI 可控 · 17:25 发 Nolan。", cost: "你硬翻的版本 · 客户那边 Yvonne 周三对会上会按这版讲。\n这一版本以后会跟你绑定。", beat: "Nolan 17:24 群里 OK。\n你 18:00 准时下班。\n但你知道周三这单她会按这版讲。", effects: { 决: 2, 规: 2, 共: -1, 险: -1 }, next: "N_TUE_NIGHT", flag: "jargon_translated" },
+        { key: "B", text: "微信阿布:「Manus demo 是哪个 · 我先对上口径再翻」。", cost: "阿布会查 · 但他也会觉得你今天不愿意硬扛。", beat: "阿布 19:11 回 ——\n\n「Manus 我问到了 · 客户老板看的是 hbr.org 一篇文章里截的图 · 他自己也没用过。」", effects: { 决: 1, 共: 1, 险: 1, 规: -1 }, next: "N_TUE_NIGHT", flag: "clarified_with_am" },
+        { key: "C", text: "先吃饭。bullet 18:30 再发。", cost: "Nolan 18:00 已下班 · 你的 bullet 周三早上才有人看。", beat: "你 18:32 发出去。\nNolan 已离线。\n\n第二天早上 Nolan 回了一个「。」\n\n*句号比批注还沉。*", effects: { 决: 1, 共: -1, 险: 1, 规: -1 }, next: "N_TUE_NIGHT", flag: "prioritized_self" },
+        { key: "E", text: "*打开陆屿留下的 brief 模板 ——* 用 AI 助手反生成 4 行 bullet。", cost: "这一发反生成里 · 你用了陆屿留下的 Notion 模板。\n他工位上那个链接 · 你昨天还能打开。", beat: "陆屿的 Notion 模板。\n你把客户老板 47 秒转写贴进去 ——\nAI 出 4 行 bullet。\n你改了两个字 · 17:18 发 Nolan。\n\nNolan 17:24 OK。\n\n*你用了一个不该再用的工具。*", effects: { 决: 3, 共: 1, 规: -2, 险: 3 }, next: "N_TUE_NIGHT", flag: "ai_decoded_with_lu_template", condition: s => s.flags.has("saw_lu_template") || s.items.has("hr_email_screenshot") }
       ]
     },
 
     N_TUE_NIGHT: {
-      chapter: "第三章 · 散会余韵",
+      chapter: "第二章 · 没有他的工位",
       title: "周二 23:30 · 望京回家路",
-      summary: "周二晚下班 · 出租车上 · 米拉离职第一天 + 煎饼摊预埋 + 闹钟设了",
-      task: "周二夜 · 下班路上 · 高德预计 18 分钟",
+      summary: "周二夜 · 出租车上 · 你翻了一下手机相册的 awareness 文件夹",
+      task: "周二夜 · 下班路上 · 你今天加班了",
       weight: 1,
-      preludes: {
-        NT3_A: `*你 17:25 发完 4 行 bullet · Nolan 18:00 回 OK · 你 20:30 还在加最后两封询价邮件 · 21:50 才出公司 · 22:08 打到车。*`,
-        NT3_B: `*阿布 19:11 私聊回:"Manus 我问到了 · Sam 是看了 hbr.org 一篇文章里截的图 · 他自己也没用过。"*\n*你 22:00 出公司。今天对上口径就行 · 不至于通宵 · 22:15 上车。*`,
-        NT3_C: `*你 18:32 才把 bullet 发出去。Nolan 已经离线。*\n*你 19:30 出公司 —— 这周第一次踩着饭点下班 · 19:42 打到车。*\n*下班路上你刷飞书 —— Nolan 给你回了一个"。"*\n*句号比批注还沉。*`,
-        NT3_D: `*"达人是巨婴 · 客户也是巨婴。"*\n*你 22:30 出公司路上过了一遍这句话 · 22:48 上车。*\n*你把它写进了手机备忘录 · 标题是"V说的"。*\n*莫名觉得 · 今晚能睡着。*`,
-        NT3_E: `*你 17:18 把 4 行 bullet 发了 · AI 助手版本 —— 你自己改了两个字 · 主要保留它写的。*\n*Nolan 17:24 群里 OK。*\n\n*17:32 阿布私聊:"哎你今天这 4 行 · 写得有点不像你哎。"*\n*"……怎么了?"*\n*"挺通顺 · 但客户那边 Yvonne 看着像谁 paste 的。周三客户会上你别 paste · 自己讲哈。"*\n\n*22:51 你刚到家 · Aurora 项目群弹一条 ——*\n*Nolan 转 Sam:"你那 4 行我让 Cursor 又重写了一版 v2 加了点 ROI 锚点 · 你看下 · 周三对的时候照这版讲哈。"*\n*[附 Cursor 链接]*\n\n*Sam 用 Cursor 写 brief。*\n*你用 AI 助手反向解码。*\n*Sam 又用 Cursor 重写你的解码。*\n*大家都在用 AI · 但都装作不在用 AI · 套了三层。*`
-      },
-      body: function(state) {
-        const milaThought = state.flags.has("caught_mila")
-          ? `*飞书侧栏的"米拉_转正答辩 · review"那个 doc · 灰色置顶。*\n*米拉说过让你删。*\n*你盯着那个灰色 doc 3 秒。*\n*你没删。*\n*—— 不是因为不舍 · 是因为删了就等于承认那天电梯口是你们最后一次说话。*`
-          : `*飞书侧栏的"米拉_转正答辩 · review"那个 doc · 灰色置顶。*\n*你想点开删掉它。*\n*然后想 —— 删了她就真的不在这家公司了。*\n*你没删。*`;
-        return `出租车上。\n\n你坐副驾驶后排。\n司机静音模式 · 一直没说话。\n窗外望京 SOHO · 灯还亮着一半。\n\n—— 高德推送行程预计 18 分钟。\n—— 你没开飞书。\n—— 你没开微信。\n—— 你就看着窗外。\n\n*米拉今天是不是就在这条路上打过车?*\n*她那盆绿萝带回家了吗。*\n\n——\n\n路过双井那个煎饼摊 · 还在出摊。\n*你想 —— "明天早上下楼吃个煎饼吧 · 加两个蛋。"*\n\n——\n\n到家。\n你刷牙的时候盯了镜子两秒。\n镜子里的你看起来累 · 但没崩。\n\n你设闹钟 —— **周三早 7:30**。\n你爬上床。\n\n${milaThought}`;
-      },
+      body: `出租车上。
+
+司机静音模式 · 一直没说话。
+窗外望京 SOHO · 灯还亮着一半。
+
+——
+
+你翻了一下手机相册。
+
+awareness 文件夹 ——
+今天新增的几张截图。
+你看了一会。
+锁屏。
+
+——
+
+到家。
+你刷牙时盯了镜子两秒。
+
+设闹钟 · 周三早 7:30。
+爬上床。
+
+——
+
+*陆屿走了一天。*
+*你这一天 · 没跟任何人提过他的名字。*`,
       choices: [
-        { key: "A", text: "关灯 · 睡。", effects: { 共: 1 }, next: "NW1" },
-        { key: "B", text: "不关灯 · 让屏幕亮着 · 翻一会儿手机才睡。", effects: { 共: 1 }, next: "NW1" }
+        { key: "A", text: "关灯 · 睡。", cost: "你明天会比今天累。\n但你今晚至少能睡。", beat: "屏幕暗下来。\n窗外有车经过。\n你侧过身。", effects: { 共: 1, 险: -1 }, next: "NW1", flag: "tue_slept" },
+        { key: "B", text: "不关灯 · 翻一会儿手机才睡。", cost: "你今晚不会睡好 · 明天 11 点 Vivian 来你工位你会有点反应慢。", beat: "你滑到陆屿那条「我等下答辩」。\n灰色。\n你看了一会。\n锁屏。", effects: { 共: 1, 险: 2 }, next: "NW1", flag: "tue_unrest" }
       ]
     },
 
     NW1: {
-      chapter: "第四章 · 周中风暴",
-      title: "周三 11:00 · Sam 审名单",
-      summary: "周三 11:00 · 客户老板 Sam 通过 Nolan 转 4 条 quick comments · KaptainK 越级 18W",
-      task: "Aurora · Sam 4 条 quick comments 待回 · KaptainK 18W 越级",
+      chapter: "第二章 · 没有他的工位",
+      title: "周三 11:00 · Vivian 审名单",
+      summary: "周三 11:00 · Vivian 直接给 4 条评语 · 第 4 条出格了一点",
+      task: "周三 11:00 · 你 OA 还登不上 · Vivian 站在你工位",
       weight: 3,
-      preludes: {
-        N_TUE_NIGHT_A: `*周三早 7:30 闹钟你按掉了 · 7:43 起床 · 7:55 楼下煎饼摊。*\n*你点了一份煎饼加两个蛋 —— 比你昨晚答应自己的多了一个蛋。*\n*9:24 进电梯。*`,
-        N_TUE_NIGHT_B: `*周三早 7:30 闹钟响了你没听见 · 7:55 被手机掉床上砸醒。*\n*你昨晚翻手机翻到 1 点半 · 刷了 47 条小红书 · 没有一条跟工作有关。*\n*8:05 楼下煎饼摊 —— 加一个蛋 · 没力气加两个。*\n*9:28 进电梯。*`
-      },
-      body: `**周三 09:30**。\n\n你打开飞书 —— 今天的待办比昨天多 11 项。\n\nRourkeHolly 还是没回。\nKonstantin 还是"出差中"。\n\n10:58 · OA 弹窗:\n\n> 标题:【需操作】SSO 单点登录重新验证 · 第 14 批次\n> 发件人:it-ops@growmax.io\n> \n> 第 14 批次同事您好:\n> \n> 您当前 **PM-14 · 第 14 批次** 的 SSO 鉴权窗口将于今日 17:00 关闭 ·\n> 请在过期前完成 4 步验证。\n> 如有问题 · 请联系您的 **批次联络人**。\n> \n> —— Growmax IT 运营组\n\n*"第 14 批次"。*\n*"批次联络人"。*\n*这俩词你这两年的 OA 邮件里从来没出现过 —— 但今天第一次出现。*\n*你 mark 了一下 · 等中午再处理。*\n\n——\n\n**11:00**。\n\n群里 Nolan 转发 Sam 微信(Sam 不进群)4 条 quick comments:\n\n> 1. RourkeHolly 周二还没回?她周一不是说"考虑"吗\n> 2. TechPeter 你们怎么扣的?海胆 Copilot 上周被 OpenLab 收购 · 不算我们竞品了\n> 3. KaptainK 经纪人那边给我直接邮件 18W · 你们之前不是说不会超 13W?\n> 4. NoTechBro "吐槽加 1W" 是什么操作 · 解释一下\n\n*4 条评论 · 4 个炸弹。*\n*Konstantin 越级直接邮件给 Sam · 把你 cut out · 这是行业 dirty trick。*\n\n阿布 11:04 跟一句:\n\n> "@{playerName} · 我 11:30 才能脱身 · 你先稳住 · 一条条来哈。"\n\n*你的咖啡还没喝完。*\n\n**11:08** · Nolan 单独私聊你(不在群):\n\n> Nolan: {playerName} 我也尴尬 · Sam 那个 18W 邮件他没抄我 · 我刚才才看到\n> Nolan: 你这边怎么处理 · 我配合\n\n*你正想回 Nolan · 他又发了一条:*\n\n> Nolan: 还有一件事 · 你别 forward 也别截图\n> Nolan: Holly 经纪人 Lina 周一其实跟我通过电话\n> Nolan: 她说 Holly 这周不接 ad —— 海外有 PR crisis 她要先处理 · 周二她整个团队连邮件都没看\n> Nolan: 但她让我**不要跟 Sam 说这个** —— Sam 知道了会盯时间表 · 反而把 Holly 也得罪\n> Nolan: 所以 Sam 第 1 条那个 quick comment · 答案是「Holly 团队这周不在线」· 但你不能这么写\n> Nolan: 我现在告诉你 · 是因为你今天要 hold 这单 · 你心里得有数`,
+      body: `**周三 09:30**。
+
+你打开飞书。
+RourkeHolly 还是没回。
+Konstantin 还在「出差中」。
+
+——
+
+10:58 · OA 弹窗:
+
+> 标题:【需操作】SSO 单点登录重新验证 · 第 14 批次
+> 您当前 **PM-14 · 第 14 批次** 的 SSO 鉴权窗口将于今日 17:00 关闭。
+> 如有问题 · 请联系您的 **批次联络人**。
+
+*第 14 批次。*
+*批次联络人。*
+*这两个词你这两年的 OA 邮件里从来没出现过。*
+
+——
+
+**11:00**。
+
+Vivian 走到你工位 · 把 iPad 立在桌沿。
+飞书工作日志她直接给 4 条评语:
+
+> 1. RourkeHolly 这版选得**精准度**够 · 但 CPM 偏高 · 客户会算账。
+> 2. KaptainK 头像换了 · 视觉一致性差 · 让 Konstantin 那边重发。
+> 3. NoTechBro 内容形式 reverse 一下 · 把吐槽放前 30 秒。
+
+> 4. {{vivian_quote|「用一周后没人会再提起。」}}
+
+——
+
+Vivian 把 iPad 收回:「赶紧改改去吧。」
+
+——
+
+你 OA 翻历史日志 · 想找之前类似单的参考。
+顺手翻到陆屿过去 6 周的工时记录。
+
+> 周一-周日 平均 55-62 小时。
+> 4 个周日 · 进过办公室。`,
       choices: [
-        { key: "A", text: "*\"按 4 条顺序回 —— Holly 我再 follow / TechPeter 重新评估 / KaptainK 我跟 Konstantin 对一下 / NoTechBro 我解释吐槽营销。\"*", effects: { 决: 2, 规: 2, 共: 1, 险: -1 }, next: "NW2", flag: "orderly_response" },
-        { key: "B", text: "*\"群里 @ 阿布 + Nolan:'Konstantin 越过我直接给 Sam 报价 · 我建议先冻这单 · 流程上要 escalate。'\"*", effects: { 决: 3, 险: 2, 规: 1, 共: -2 }, next: "NW2", flag: "escalated_konstantin" },
-        { key: "C", text: "*\"全部'稍等阿布 11:30 sync 后回'· 不当场答 · 给阿布留时间。\"*", effects: { 决: -1, 规: 2, 共: 2, 险: -1 }, next: "NW2", flag: "bought_time_for_am" },
-        { key: "D", text: "*\"打开 OA 重新登录 —— 等加载时你看到弹窗右下角小字:\`Mirror Auth v14 · For Cohort Personnel Only\`。\"*", effects: { 决: 1, 险: 3, 规: -1 }, next: "NW2", item: "saw_mirror_auth", condition: s => s.items.has("hr_email_screenshot") }
+        { key: "A", text: "按 Vivian 4 条评语 · 改 KOL 名单。", cost: "你今天 12:00 之前要改完 · 没时间想第 4 条评语是什么意思。", beat: "你打开飞书 · 一条条改。\n第 4 条 Vivian 没让你改 —— 你也没问。", effects: { 决: 2, 共: -1, 规: 2, 险: -1 }, next: "NW2", flag: "executed_vivian_edits" },
+        { key: "B", text: "*第 4 条那句你还在想 ——* 当面问 Vivian:「这句什么意思?」", cost: "你问出来了 · 但她不会真的回答。\n你也不会真的得到一个答案。", beat: "Vivian 看你一会。\n\n「这单太多人看着。」\n\n*这是「我不能告诉你」的礼貌说法。*", effects: { 决: 2, 共: 2, 规: -1, 险: 2 }, next: "NW2", item: "vivian_quote", flag: "asked_vivian_quote", condition: s => s.flags.has("vivian_quote") },
+        { key: "C", text: "翻陆屿过去 6 周的飞书 · 看他原来怎么写 brief。", cost: "陆屿那条线你今天会越翻越多。\n你现在就该停 · 但你不会停。", beat: "你翻到他 4 个周日的打卡时间戳:\n\n22:13 · 23:47 · 周日 04:08 · 周日 21:55。", effects: { 决: 1, 共: 2, 规: 0, 险: 1 }, next: "NW2", flag: "saw_lu_overtime" },
+        { key: "D", text: "OA 弹窗右下角 ——「Mirror Auth v14」。截屏。", cost: "你截这一张图的时候 · 你不再是无意中察觉。", beat: "右下角小字:\n\n「Mirror Auth v14 · For Cohort Personnel Only」\n\n*Cohort 这个词 · 年会 PPT 见过。「S 级 Cohort 培养计划」。*", effects: { 决: 1, 险: 3, 规: -1 }, next: "NW2", item: "saw_mirror_auth", flag: "captured_mirror_auth", condition: s => s.items.has("hr_email_screenshot") }
       ]
     },
 
     NW2: {
-      chapter: "第四章 · 周中风暴",
-      title: "周三 16:30 · OA + Gordon + Emma",
-      summary: "周三 16:30 · OA 故障 + Gordon 反问 + Emma usage rights 突袭 12 个月 18W",
-      task: "周三 16:30 · OA 故障 · Emma 18W 突袭 · Vivian 警告别接",
+      chapter: "第二章 · 没有他的工位",
+      title: "周三 16:30 · Emma 18W 突袭",
+      summary: "周三 16:30 · Vivian 把 Emma 带到会议室 · 18W 不议价 · Emma 顺嘴提了「陆什么的」",
+      task: "周三 16:30 · Emma 12 个月 18W · Vivian 在场",
       weight: 3,
-      preludesByFlag: {
-        orderly_response: `*Sam 中午回:"4 条都看到了 · TechPeter 加进 candidate 重新筛 · KaptainK 那 18W 我们 hold · 等 Konstantin 解释 · NoTechBro 吐槽我们买单加 1W。"*\n*稳。*`,
-        escalated_konstantin: `*阿布跟 Sam 11:45 单独 wechat 5 分钟。*\n*Sam 12:08 群里:"KaptainK 这单先 hold · 我让 Nolan 那边重新过流程。"*\n*Konstantin 14:00 邮件 cc Sam:"价格已是底线 · 请勿干预我方与 brand 直接沟通。"*`,
-        bought_time_for_am: `*阿布 11:35 群里挨个回了 4 条 · 你刚好下班吃饭。*\n*回来你发现 Sam 12:10 群里一句:"@{playerName} 你今天不在?"*`,
-        saw_mirror_auth: `*你 14:30 又看了一眼那个 OA 弹窗 —— 右下角小字 \`Mirror Auth v14 · For Cohort Personnel Only\` 还在。*\n*"Cohort"。这个词你第一次见是在公司年会的 PPT 里 —— "S 级 Cohort 培养计划" —— 当时你以为是营销话术。*\n*现在你不太确定。*`
-      },
-      body: `**16:20**。\n\nNW1 4 条 Sam 评论 · 你按选择处理完。\n你刚 push 完 NoTechBro 的吐槽报价(Nolan 转 Sam 接受 · 加价 1W 通过)。\n\nOA SSO 报错 —— 你飞书登不进去。\n你抬头。\n角落 {{unlock_nw2|Gordon|hr_email_screenshot}} 的兜帽**动了一下**。\n\n你叹了口气 · 微信 Gordon。\n你:"哥能帮我搞下 OA 吗 飞书都登不上"\n\n—— 28 分钟后。\nGordon 微信回:"你那 OA 是哪年部署的"\n\n*这不是回答 · 是反问。*\n*Gordon 不修 OA · Gordon 在评估 OA。*\n\n——\n\n**16:48**。\n\nOA 还没好。你打开邮箱准备改用 webmail。\n\n—— 你看到一封今早 09:11 收到的邮件 · 你之前没注意:\n\n> From: hr-system@growmax.io\n> Subject: [Awareness] You have been added as a recipient\n> Body: (空)\n> **抄送列表(BCC 你):seraphine@growmax.io · pm14-ops@(隐去)**\n\n*"BCC 你"。*\n*你不该看到这封。*\n*HR 系统自动抄送 bug · 还是有人故意把你加进去?*\n\n——\n\n**16:51** · Emma WhatsApp 弹出来:\n\n> Emma: hi {playerName}\n> Emma: 我跟我经纪人 review 了一下合同 · 6 个月不够 · 客户那边要的是"全网+海外+短视频+长视频"\n> Emma: 我们最少得 12 个月 · 12 个月 + 全权 · 报价 18W 包打包\n> Emma: 不议价\n\n**16:53** · Vivian 微信你(她从来不主动发):\n\n> Vivian: 哎 Emma 这种你别正面回 · 转给阿布 · 让阿布去跟她经纪人对 · 你别担在自己手里\n> Vivian: 你做久了就知道 —— **达人是巨婴 · 客户也是巨婴 · 你做久了 · 都是在哄婴儿。**`,
+      body: `**16:30**。
+
+Vivian 把 Emma 带到会议室。
+你刚坐下 · Emma 已经把合同摆在桌上。
+
+> Emma: hi {playerName}
+> Emma: 我跟经纪人 review 过了 · 6 个月不够
+> Emma: 12 个月 + 全权 · 18W 包打包
+> Emma: 不议价
+
+Vivian 没说话 · 看你。
+
+——
+
+Emma 翻了一下手机:
+
+> Emma: 哦对 · 上次那个**陆什么的** · 他给我看的那版 deck · 我老板还在 quote 里提
+> Emma: 就那个「共鸣」的 framework · 我老板下周 board meeting 还要拿出来用
+> Emma: 你们能不能让他再过一版给我
+
+*她不知道陆屿被裁了。*
+*她在抱怨自己被老板揪着。*
+
+*你看了 Vivian 一眼。*
+*Vivian 没看你。*`,
       choices: [
-        { key: "A", text: "*\"正面 WhatsApp 回 Emma:'12 个月 18W 我先 review 一下 · 我们晚点回'。\"* 自己抗", effects: { 决: -1, 共: 1, 规: -1, 险: 2 }, next: "N04", flag: "emma_self_handle" },
-        { key: "B", text: "*\"Emma 这条转给阿布 · 让阿布跟她经纪人对(听 Vivian 的)。\"*", effects: { 决: 1, 共: 2, 规: 2, 险: -1 }, next: "N04", flag: "emma_escalated_to_am" },
-        { key: "C", text: "*\"Emma 这条转给阿布 + Cc Vivian · 让总监知道这单的复杂性。\"*", effects: { 决: 2, 共: 1, 规: 1 }, next: "N04", flag: "emma_brought_director" },
-        { key: "D", text: "*\"那封 BCC 你的 [Awareness] 邮件 · 你截了 header 那一行 · 但邮件本体没截。\"*", effects: { 决: 2, 险: 3, 规: -2 }, next: "N04", item: "bcc_awareness_header" }
+        { key: "A", text: "正面回 Emma:「12 个月 18W 我先 review · 我们晚点回。」", cost: "你今晚要 review Emma 合同 · 阿布不会替你扛。", beat: "Emma 点头。\nVivian 没说话。\n你回工位 —— 屏幕上 Emma 18W 草稿 + Aurora v4 brief 同时开着。", effects: { 决: 1, 共: 0, 规: 0, 险: 2 }, next: "N04", flag: "emma_self_handle" },
+        { key: "B", text: "「这单转给阿布跟你经纪人对 —— 他主对接合同条款。」", cost: "阿布会接 · 但他也会觉得你今天「不愿意扛」。", beat: "Emma:「行 · 那让阿布加我经纪人微信。」\nVivian:「{playerName} 你回去吧。」\n\n*她没让阿布去 · 让你回去。*", effects: { 决: 1, 共: 2, 规: 2, 险: -1 }, next: "N04", flag: "emma_escalated_to_am" },
+        { key: "C", text: "回 Vivian 邮件:「Emma 12 个月 18W · 阿布主对接 · 抄送您」。", cost: "你回邮件那一刻 · 你的邮件头会被自动加上一些 BCC。\n你不会立刻发现。", beat: "你点击发送。\n邮件头浮出一行小字 ——\n\n**抄送列表(BCC 你):seraphine@growmax.io · pm14-ops@(隐去)**\n\n*BCC 你?*\n*你不该看到这行。*", effects: { 决: 2, 共: 1, 规: 1, 险: 2 }, next: "N04", item: "bcc_awareness_header", flag: "saw_bcc_header" },
+        { key: "D", text: "*Emma 那句「陆什么的」——* 接她话:「他叫陆屿。」", cost: "Emma 会问「他怎么了」。\nVivian 会看着你 · 等你怎么回。", beat: "Emma:「啊对 陆屿!那让他再过一版给我?」\n\n你说:「他不在了。」\n\nEmma:「啊?」\n\nVivian 没说话。", effects: { 决: 3, 共: 3, 规: -2, 险: 3 }, next: "N04", flag: "spoke_lu_name", condition: s => s.flags.has("vivian_quote") }
       ]
     },
 
     N04: {
-      chapter: "第五章 · 周四的空位",
-      title: "周四 09:30 · 米拉空位",
-      summary: "周四早 9:30 · 米拉工位真的空了 + Konstantin 仍沉默 + 客户老板今天 17 点要 align KaptainK",
-      task: "Aurora · 已签 4 / 在签 5 / 谈不下 1 (KaptainK) / 没回 2 · 今 EOD 8 个定下来",
+      chapter: "第三章 · 他留下的弹药",
+      title: "周四 9:30 · 工位被新人占",
+      summary: "周四 9:30 · 陆屿走了 3 天 · 工位被新人占了 · 笔记本里夹着一张手写便签",
+      task: "周四 9:30 · 你在他笔记本里 · 看到他给你写的字",
       weight: 3,
-      preludesByFlag: {
-        emma_self_handle: `*Emma 凌晨 1:02 一连发 7 条 WhatsApp · 你 6:45 醒看到。*\n*第 7 条是:"在吗"。*`,
-        emma_escalated_to_am: `*阿布凌晨 0:08 邮件:"Emma 16W 12 月 我搞定了 · 你今天签合同就行 · 我去睡了。"*`,
-        emma_brought_director: `*Vivian 早 8:30 微信:"今天 11:00 茶水间见面聊一下 · Emma 这单不只是 Emma 一个人的事。"*`,
-        bcc_awareness_header: `*你 8:50 进公司 · 邮箱里那封 [Awareness] 还在收件箱顶。*\n*你没删 · 也没标已读 —— 万一系统自动回收呢。*\n*你给那个截图改了名字 · 叫 "wed_1648_bcc"。*`
-      },
-      body: `**9:30**。\n\n你坐下。\n你一秒注意到 —— 米拉工位上的盲盒展示架不见了。\n画了猫脸的马克杯也不见了。\n"周二上线 · KPI 112%"的便利贴 · 撕得只剩半张胶。\n\n工位干净得像没人来过。\n\n——\n\n你打开 Aurora 飞书表 —— 多了一列:\n\n> **\`Last comment: HR · 09:01 · "Mila Chen 已离职"\`**\n\n*HR 自动同步飞书的字段。*\n*"已离职"三个字 · 系统冷冰冰。*\n*Mila 一晚就被处理掉了。*\n\n——\n\n**9:42** · 阿布群消息:\n\n> "@{playerName} @Jasper · 周四盘点:已签 4 / 在签 5 / 谈不下来 1(KaptainK 报价超)/ 没回 2"\n> "今天 EOD 前 8 个定下来。"\n> "另:**Sam 让 Nolan 转一句:'今天 17 点群里 align 一下 KaptainK 那单 · 老板有想法。'**"\n\n*"老板有想法。"*\n*这是国内 agency 跟客户最 nightmare 的一句话之一。*`,
+      body: `**9:30**。
+
+你抱着电脑往工位走 ——
+路过陆屿那一格。
+
+工位上多了个新人 —— 圆脸 · 短发 · 入职牌还没换 · 写着「实习」两个字。
+她正在整理桌上一堆陆屿留下的东西。
+盲盒架已经被她移到地上。
+桌上一摞旧笔记本 · 她正要塞进废纸箱。
+
+——
+
+「这本要丢吗?」 她抬头问你 · 把最上面那本笔记本抽出来。
+
+*那是陆屿的工作笔记本。*
+*封面上写着「Aurora · 周三起」。*
+
+你说「我看一下。」
+
+——
+
+笔记本前几页 · 是 Aurora 客户偏好分析 + 达人筛选维度。
+你翻到中间 ——
+
+掉出一张手写便签。
+
+> 给 {playerName}:
+> 这单的客户喜欢用「共鸣」这个词
+> brief 里能塞就塞 亲测有效
+> —— 陆屿 · 上周三
+
+*上周三。*
+*那是他答辩前 5 天。*`,
       choices: [
-        { key: "A", text: "*\"先盘点合同 · 列周四/周五签约时间表 · 17:00 前先备弹药。\"*", effects: { 决: 2, 规: 2, 共: -1, 险: -1 }, next: "N06C", flag: "thursday_battle_plan" },
-        { key: "B", text: "*\"走到 Vivian 工位 · 问米拉的事。\"*", effects: { 决: 1, 共: 3, 规: -1, 险: 1 }, next: "N06C", flag: "asked_vivian_mila", item: "vivian_mila_truth" },
-        { key: "C", text: "*\"去茶水间 · 等 Vivian 11:00 那个聊。\"*", effects: { 决: 2, 共: 3, 规: -1, 险: 1 }, next: "N06C", flag: "vivian_11am_briefing", condition: s => s.flags.has("emma_brought_director") },
-        { key: "D", text: "*\"光标停在飞书表那个'Mila Chen 已离职'字段上 —— 你右键看属性 · 编辑者是 \`seraphine@growmax.io\` · 时间是周三 23:47。\"*", effects: { 决: 1, 险: 3, 共: 1 }, next: "N06C", item: "mila_termination_metadata" }
+        { key: "A", text: "把便签夹回笔记本最后一页 · 笔记本带回自己工位。", cost: "你这个动作 · 没人看见。\n你在替陆屿整理他没来得及交接的项目。", beat: "你把笔记本放进自己抽屉。\n抽屉关上的时候 · 你听见自己的呼吸 · 慢了一拍。", effects: { 决: 1, 共: 3, 规: 1, 险: 0 }, next: "N06C", flag: "kept_lu_notebook" },
+        { key: "B", text: "「这本你丢吧。」 — 让新人继续整理。", cost: "便签会跟着废纸箱被收走。\n陆屿主动帮过你这件事 · 不会再有人记得。", beat: "新人「好的」· 把笔记本扔进箱子。\n你回到自己工位。\n屏幕上 Aurora 飞书 ·「共鸣」两个字 · 你今天刚好要写一版 brief。\n你还没意识到为什么那两个字 · 突然顺手。", effects: { 决: 1, 共: -2, 规: 1, 险: -1 }, next: "N06C", flag: "discarded_lu_notebook" },
+        { key: "C", text: "把便签拿出来 · 夹进自己抽屉的某一本旧记事本里。", cost: "你保留的是那张纸 · 不是那本笔记本。\n剩下的工作笔记 · 跟着废纸箱走。", beat: "你把便签夹好。\n关抽屉的瞬间 · 你想:「这是他给我的最后一句话。」", effects: { 决: 0, 共: 2, 规: 0, 险: 1 }, next: "N06C", flag: "kept_only_note" },
+        { key: "D", text: "*你已经存了 3 张照片 · 这一张应该也存。* —— 把便签拍照 · 存进 awareness 文件夹。", cost: "便签从一张纸 · 变成你证据链的一部分。\n陆屿写这张便签时 · 不知道自己会成为证据。", beat: "你拍完便签 · 抬头看新人 ——\n她已经把笔记本扔进箱子了。\n你抓住她:「等一下 ——」\n你把笔记本从箱子里拿出来 · 放进自己抽屉。", effects: { 决: 1, 共: 2, 规: -1, 险: 2 }, next: "N06C", flag: "documented_lu_note", condition: s => s.items.size >= 2 }
       ]
     },
 
     N06C: {
-      chapter: "第六章 · 把合同钉死",
-      title: "周四 17:00-19:00 · KaptainK 双重灾难",
-      summary: "周四 17:00 客户砍 KaptainK + 19:00 Konstantin 反扑(双重灾难一节合并)",
-      task: "Aurora · 客户砍 KaptainK + Konstantin 19:09 反扑 · Sam 19:11 直接找你",
+      chapter: "第三章 · 他留下的弹药",
+      title: "周四 17:00 · KaptainK 双重灾难",
+      summary: "周四 17:00 客户砍 KaptainK + 19:00 经纪人 Konstantin 反扑邮件 · 阿布把球踢给你",
+      task: "周四 17:00-19:00 · 你三件事都得扛 · 19:09 邮件来了",
       weight: 4,
-      preludesByFlag: {
-        thursday_battle_plan: `*你 14:00 把所有合同 ETA 列了一张表。* *RourkeHolly 36W mou 14:30 sign · TechSarah/Vina/Bro/Jesse/Molly 全部签完 · 还剩 KaptainK + Korin 备选。*`,
-        asked_vivian_mila: `*Vivian 抬头看你 · 没停打字。*\n*"她不是被裁的。她转正答辩 · '综合评分不达预期'。同期 5 人转正 3 人 · 她那 2 人之一。"*\n*"…… 你信吗?"*\n*你不知道。*`,
-        vivian_11am_briefing: `*Vivian 茶水间 12 分钟。她跟你说了 Emma · 说了 Mila · 说了"哄婴儿"具体怎么哄。*\n*她最后一句是:"你别问太多 · 但你也别假装看不见。"*`,
-        mila_termination_metadata: `*你 11:08 又点开飞书那行字段属性。*\n*\`seraphine@growmax.io · 周三 23:47\` —— 这个时间你今早第一次看的时候没多想。*\n*现在你想了 —— **23:47 是已离职状态被写进系统的时间**。*\n*Mila 周三晚上 11 点多还不知道自己第二天进不来。*`
-      },
-      body: `**17:13**。\n\n你刚跟 Nolan 在群里 align 完 RourkeHolly 36W mou。\n钉钉弹窗:Nolan 发起语音通话 · 标题:"Quick"\n\n你接。背景音是 Sam 的话尾巴 —— 他和 Nolan 在车里。\n\n—— Sam 通过 Nolan 转达:\n\n> Nolan(转 Sam): KaptainK 早上那事我们 sync 完了\n> Nolan(转 Sam): 我们决定不要她了 · 她那个 IG story Reddit 上有人讨论 · 标 #ad 没付钱 · FTC 那边可能 notice\n> Nolan(转 Sam): KaptainK 18W 预算 · NoTechBro 升档 7W → 11W · 剩下 RourkeHolly 加价 25W → 36W 锁死\n\n—— 17:18 · 你低头看了一眼时间。\n—— **2 小时 42 分钟到 EOD。**\n—— 你今天还没跟 Konstantin 说要退单。\n—— 你还没跟 NoTechBro 说要升档。\n—— 你还没跟 RourkeHolly 团队说加 11W。\n\n*你刚把咖啡杯放下。*\n\n——\n\n17:30-19:00 · 你按选择路径处理三件事。\n\n**19:08**。\n你站起身收包。\n\n—— 19:09 · KaptainK 经纪团队(Konstantin)邮件抄群所有人 · official letter · 5 段英文 · 你 30 秒扫完:\n\n> "We respectfully disagree with the unilateral termination."\n> "Written response expected by Friday 12:00 PT."\n> — Konstantin\n\n*大意:Sam 周二 11:00 PT 跟 KaptainK **有过口头授权** · 录音在档 · 威胁 tortious interference · 周五中午前给正式答复。*\n*抄送:Nolan + 阿布 + Vivian + 你 + Sam(by Nolan forwarding)。*\n*—— 那天 Sam 有没有跟 KaptainK 通过电话?**只有 Sam 自己知道。***\n\n—— **19:11** · Sam 第一次直接 wechat 你(平时只跟 Nolan):\n\n> Sam: {playerName} 你过来一下 我现在还在公司\n> Sam: 这事变大了\n\n*你包还没背稳。*\n*你刚以为今天可以 7 点走。*`,
+      body: `**17:13**。
+
+你刚跟 Nolan align 完 RourkeHolly 36W mou。
+钉钉弹窗:Nolan 发起语音 · 标题:「Quick」
+
+你接。
+
+—— Nolan 转阿布的话:
+
+> Nolan(转阿布): KaptainK 早上那事我们 sync 完了
+> Nolan(转阿布): 我们决定不要她了 · 她那个 IG story Reddit 上有人讨论 · 标 #ad 没付钱 · FTC 那边可能 notice
+> Nolan(转阿布): KaptainK 18W 预算转给 RourkeHolly 加价 25W → 36W 锁死 · NoTechBro 升档 7W → 11W
+
+——
+
+**17:18**。
+2 小时 42 分钟到 EOD。
+你还没跟 Konstantin 说要退单。
+你还没跟 NoTechBro 说升档。
+你还没跟 RourkeHolly 团队说加 11W。
+
+——
+
+17:30-19:00 · 你按选择路径处理三件事。
+
+——
+
+**19:09**。
+
+Konstantin 邮件抄群:
+
+> 标题:Re: KaptainK Termination — Formal Notice
+> 5 段英文 · 你 30 秒扫完。
+
+*大意:阿布周二跟 KaptainK 有过口头授权 · 录音在档 · 威胁 tortious interference · 周五中午前给正式答复。*
+*抄送:Nolan · 阿布 · Vivian · 你。*
+
+——
+
+**19:11** · 阿布第一次单独 wechat 你(平时都在群里):
+
+> 阿布: {playerName} 你过来一下 我现在还在公司
+> 阿布: 这事变大了
+
+*你包还没背稳。*`,
       choices: [
-        { key: "A", text: "*\"去 Sam 办公室 · 把 timeline 当面摆给他 · 让他自己回 Konstantin。\"*", effects: { 决: 3, 共: 1, 规: 1, 险: 1 }, next: "N_THU_NIGHT", flag: "client_face_to_face" },
-        { key: "B", text: "*\"回 Sam:'1 小时到您那边 · 建议您先群里 official 回 Konstantin 一句「团队 review · 周五 12 PT 前正式答复」· 给我们 14 小时 buffer'。\"*", effects: { 决: 2, 共: 0, 规: 3, 险: -1 }, next: "N_THU_NIGHT", flag: "bought_14_hours" },
-        { key: "C", text: "*\"微信阿布:'救命 · KaptainK 反扑 · Sam 叫我过去 · 你今晚还在公司吗 · 我需要你一起去'。\"*", effects: { 决: 1, 共: 3, 规: -1, 险: 1 }, next: "N_THU_NIGHT", flag: "am_called_in" },
-        { key: "D", text: "*\"先去 Vivian 工位 —— 她还在 · 你过去说一句'我需要你 30 秒'。她抬头说'我等你这条很久了'。\"*", effects: { 决: 3, 共: 3, 规: -1, 险: 1 }, next: "N_THU_NIGHT", flag: "director_backed_kill", item: "director_endorsement", condition: s => s.items.has("vivian_quote") },
-        { key: "E", text: "*\"飞书共享盘里有 Aurora 合同的全文 · 你之前没当回事 —— 现在你想起来了。\"* 调出 §4.2 Sole Sourcing 条款 · 截图 + 时间戳 · 让阿布转 Vivian · Vivian 转法务。", effects: { 决: 4, 规: 3, 共: -1, 险: 3 }, next: "N_THU_NIGHT", flag: "contract_clause_quoted", item: "contract_clause_screenshot", condition: s => s.flags.has("escalated_konstantin") || s.items.has("hr_email_screenshot") }
+        { key: "A", text: "去阿布工位 · 接受退单 + 让法务做善后。", cost: "周五 12:00 之前 · 你和阿布要给 Konstantin 一个正式答复。\n那个答复 · 不会是你现在能写出来的。", beat: "阿布看着你 ——\n\n「明天上午我们一起开个会 · Vivian 也在。\n你今晚先不要回 Konstantin · 等我们对完。」", effects: { 决: 1, 共: 1, 规: 2 }, next: "N_THU_NIGHT", flag: "accepted_kaptaink_termination" },
+        { key: "B", text: "尝试谈判保留 KaptainK · 不退单。", cost: "客户那边可能不接受。\n阿布可能会在你跟客户谈之前 · 已经把退单告诉客户了。", beat: "你打开 Konstantin 邮件草稿。\n打了三行 · 删了。\n再打三行 · 又删了。", effects: { 决: 2, 共: 1, 规: -1, 险: 1 }, next: "N_THU_NIGHT", flag: "tried_to_save_kaptaink" },
+        { key: "C", text: "升级 Vivian · 「这事变大了 不该我一个人扛」。", cost: "Vivian 会接手 · 但她接手之后你的位置 · 不会跟今天一样。", beat: "Vivian 微信回:「你过来 · 我在工位。」\n\n你过去。\n她说:「行 · 这事我跟阿布对 · 你今晚先回。」", effects: { 决: 1, 共: 2, 规: 1 }, next: "N_THU_NIGHT", flag: "escalated_to_vivian" },
+        { key: "E", text: "*合同 §4.2 ——* 调出 Aurora 主合同 · 法务反制 Konstantin 那段「口头授权」。", cost: "用合同硬刚 · 阿布会觉得你越权。\n但你今晚不用熬夜写答复了。", beat: "你点开 Aurora 主合同 PDF · 跳到 §4.2 ——\n\n左侧英文 · Sole Sourcing 条款。\n右侧 · 一行**中文备注**:\n\n「KOL 经纪人绕开 agency 直接联系客户 · 构成实质违约 · agency 有权单方终止。」\n\n—— **陆屿 · 三个月前**", effects: { 决: 3, 共: 0, 规: 2, 险: 3 }, next: "N_THU_NIGHT", item: "contract_clause_screenshot", flag: "used_lu_legal_armor" },
+        { key: "D", text: "*Vivian 工位 · 灯还亮着 · 她在等你。* —— 过去。", cost: "她要跟你说的事 · 你听完之后 · 不能再装作不知道。", beat: "Vivian 把手机翻过来扣在桌上 ——\n\n「那孩子留下的笔记里有备注 · 你应该看到了。」", effects: { 决: 2, 共: 2, 规: -1, 险: 4 }, next: "N_THU_NIGHT", item: "director_endorsement", flag: "vivian_endorsed", condition: s => s.items.has("vivian_quote") }
       ]
     },
 
     N_THU_NIGHT: {
-      chapter: "第六章 · 把合同钉死",
-      title: "周四 22:00 · 公司打车回家",
-      summary: "周四晚 · KaptainK 反扑后 · Sam 第一次直接 wechat 你 · 你没吃晚饭",
-      task: "周四夜 · 下班路上 · 你今天没吃晚饭",
+      chapter: "第三章 · 他留下的弹药",
+      title: "周四 22:00 · 出租车上",
+      summary: "周四晚 · KaptainK 反扑后 · 你回家路上 · Vivian 第一次单独 wechat 你",
+      task: "周四夜 · 你今天没吃晚饭 · Vivian 邀请你周五 Mirror review",
       weight: 2,
-      preludesByFlag: {
-        client_face_to_face: `*你 19:30 进 Sam 办公室 · 把 timeline 一条条摆完。*\n*Sam 看了你 30 秒 · 说:"我没跟 KaptainK 通过电话。Konstantin 在 bluff。"*\n*21:30 出来 · 你才发现自己今天没吃晚饭 · 21:45 打到车。*`,
-        bought_14_hours: `*Sam 19:30 群里 official 回 Konstantin · "团队 review · 周五 12 PT 前正式答复。"*\n*你 20:00 出公司 · 20:30 才打到车(地铁延误 + 高峰打车难)。*\n*你打开邮件草稿三次 · 一个字都没敲。*`,
-        am_called_in: `*阿布 20:00 跟你一起去 Sam 办公室 · 全程他主导 · 你站他后面。*\n*散会阿布拍你肩:"明天我撑你 · 你今晚去吃顿好的。"*\n*你 22:00 打车 · 阿布说他还要开车去接女儿 —— 她已经三天没看到他了。*`,
-        director_backed_kill: `*你发完 Vivian 帮你拟的回 Konstantin 邮件 · 19:30 工位坐着。*\n*Vivian 没回你邮件 · 但你知道她明早 7:30 会做点什么。*\n*你 21:00 才出公司 —— 中间在工位上发了 30 分钟呆 · 21:18 上车。*`,
-        contract_clause_quoted: `*你 19:45 调出 Aurora 合同 PDF · 翻到第 11 页 · §4.2:*\n\n> **§4.2 Sole Sourcing & Communication Protocol**\n> All commercial negotiations, including but not limited to talent fee discussions, contract amendments, and timeline adjustments, **must be channeled exclusively through the designated Agency Account Lead** (in this engagement, Growmax / Bryson Liu). Direct contact with Aurora's product, engineering, or executive personnel by talent representatives, agents, or third parties **constitutes a material breach** of this clause.\n\n*你截图 + 时间戳 · 19:50 发阿布 · 阿布 20:08 转 Vivian。*\n*Vivian 21:30 微信你:"§4.2 引用对的 · 写得也对。但合规走流程 · 周一才能正式发函 · 这周末你别再操心了。"*\n*你"嗯"了一下。*\n*但 21:55 你刷 Reddit r/influencermarketing —— 看到有人贴出一段截图:Konstantin 在某个 talent agency Slack 行业群组里 vent 了一段 · @ 了 5 个同行 · 其中有 KaptainK 的前 manager。*\n*周一 DLW 行业 newsletter 8:00 PT 推送 · 这单大概率会 cover。*\n\n*你 22:00 出公司。22:18 上车。*\n*合同条款是真的 —— 但流程比律师函慢 · 而 Konstantin 通过行业舆论先 weaponize 你。*`
-      },
-      body: `出租车上。\n\n今天的天气你完全没注意到。\n窗外路过 · 都是吃完晚饭出来溜达的人。\n一对情侣走过广场 —— 男的吃糖葫芦 · 女的吃烤红薯。\n\n*你今天没吃晚饭。*\n*Konstantin 那封 official letter · 你打开了 4 次 · 没有一次读完。*\n\n——\n\n你想到米拉。\n**她离开两天了。**\n你打开微信通讯录 · 翻到她的名字。\n头像没换。\n你点开她的朋友圈 —— 是一条"朋友仅展示最近三天"的灰线 · 滑下来空白。\n你点了"发起对话" · 输入框敲了一半 ——\n*"最近还好吗"*\n—— 你删了。退出。\n*她还在你联系人里。*\n*但你不知道往哪里发。*\n\n——\n\n到家。\n冰箱里只有矿泉水。你喝了两瓶。\n*"明天 EOD 把三件事都干完 · 然后周末睡两天。"*\n*"……我可能睡不着。"*\n\n——\n\n你躺床上。\n你定了周五早 7:30 闹钟。\n你打开手机 · 翻了一下相册的 awareness 文件夹。\n然后锁屏。\n\n*"你过来一下 · 这事变大了。"*\n*Sam 那条微信你已经看过 7 遍。*\n\n*你没睡着。*`,
+      body: `出租车上。
+
+今天的天气你完全没注意到。
+窗外路过 · 都是吃完晚饭出来溜达的人。
+
+*你今天没吃晚饭。*
+*Konstantin 那封 letter · 你打开了 4 次 · 没有一次读完。*
+
+——
+
+你打开微信通讯录 · 翻到陆屿的名字。
+头像没换。
+朋友圈一条灰线 ——「朋友仅展示最近三天」。
+
+你点「发起对话」· 输入框敲了一半 ——
+「最近还好吗」
+你删了。
+退出。
+
+——
+
+到家。
+冰箱里只有矿泉水。
+
+——
+
+你躺床上。
+定了周五早 7:30 闹钟。
+关灯。
+
+——
+
+**23:48** · Vivian 微信。
+
+(她平时不主动私聊你。)
+
+> Vivian: 周五的 Mirror review 你来吗?
+> Vivian: 不强制 · 但你来一下 我有点话跟你说。
+
+*Mirror review。*
+*你不知道这是邀请 · 还是陷阱。*`,
       choices: [
-        { key: "A", text: "关灯 · 盯天花板。", effects: { 险: 1 }, next: "N07" },
-        { key: "B", text: "开台灯 · 不睡 · 等天蒙蒙亮。", effects: { 险: 1 }, next: "N07", flag: "all_nighter" }
+        { key: "A", text: "回 Vivian:「我来。」 · 关灯。", cost: "你不知道明天那场 review 你会看见什么。\n但你已经答应了。", beat: "你按下发送。\n屏幕暗下来。\n手机扣在床头。", effects: { 决: 2, 共: 1, 规: 0, 险: 2 }, next: "N07", flag: "rsvp_mirror" },
+        { key: "B", text: "回「明天看看」· 翻一下相册的 awareness 文件夹再睡。", cost: "你今晚不会睡好。\n你也不会真的「明天看看」 —— 你心里已经决定了。", beat: "你滑过 awareness 文件夹 ——\n几张截图。\n几张元数据。\n你停在陆屿那条「我等下答辩」上 · 看了一会。\n然后锁屏。", effects: { 决: 1, 共: 1, 规: 0, 险: 3 }, next: "N07", flag: "rsvp_uncertain" },
+        { key: "C", text: "不回。关灯。", cost: "你明天可能不去。\n但你也可能会去 —— 这事现在没人能替你决定。", beat: "你把手机扣在床头。\n灯关了。\n窗外有车经过的光 · 在天花板上滑了一道。", effects: { 决: 0, 共: -1, 规: 1, 险: 1 }, next: "N07", flag: "rsvp_silent" }
       ]
     },
 
     N07: {
-      chapter: "第七章 · 周五的截稿日",
-      title: "周五 11:00 · 凌晨 brief + Emma 脚本 + EOD 三件事",
-      summary: "周五 11:00 · Sam 凌晨 3:11 用 Cursor 重写 brief v5 + Emma 第一版脚本 sample + RourkeHolly 终签",
-      task: "Aurora EOD 三件事 · v5 brief / KaptainK 答复 / RourkeHolly 36W 终签",
+      chapter: "第四章 · 周五的截稿日",
+      title: "周五 11:00 · 凌晨 brief + Emma 脚本",
+      summary: "周五 11:00 · 客户老板凌晨 3 点用 Cursor 重写 brief v5 · Emma 脚本 · 三件事 EOD",
+      task: "周五 11:00 · EOD 三件事 · v5 brief / KaptainK 答复 / RourkeHolly 终签",
       weight: 4,
-      preludesByFlag: {
-        client_face_to_face: `*周五早 8:00 · Sam 群里跟一句:"昨晚 timeline 我看了 · 这事到此为止 · KaptainK 不要 · Konstantin 让 Nolan 周五 12 PT 答复。"*\n*你松了一口气 · 但你知道 Sam 还没说"这事我兜"四个字。*`,
-        bought_14_hours: `*周五早 8:30 · 你检查邮件草稿仍是空白。*\n*Sam 9:00 群里:"@{playerName} 答复 Konstantin 的邮件 · 你今天 EOD 前给我看一版 · 我签字。"*\n*你又是替死鬼。*`,
-        am_called_in: `*阿布周五早 8:30 私聊:"昨晚谢谢 · 今天我撑你 · 三件事并行你别怕。"*\n*你回了一个 emoji · 没多说。*\n*阿布 8:50 才进公司 —— 比平时晚 50 分钟。*`,
-        director_backed_kill: `*Vivian 周五早 7:30 已经主动 escalate 给 Aurora 客户老板的老板。*\n*你不知道这是不是 favor · 但她做了 · 而且没跟你说。*\n*8:45 你看到群里 Sam 一句:"KaptainK 这单 Vivian 已经跟我老板那边对过了 · 退单的事不用我们再操心。"*`,
-        contract_clause_quoted: `*周五早 6:50 · Vivian 微信你截图 —— 她把 §4.2 + 你的截图打包发给了 Aurora 客户法务总监 · 抄送 Sam。*\n*7:08 客户法务总监回:"Got it. Will brief Sam at 9:30 PT today."*\n\n*8:00 Konstantin 回了一封 official letter cc 群所有人 —— 措辞从昨晚的 "respectfully disagree" 变成 "open to dialogue · let's schedule a call"。*\n*但 8:15 你刷 Twitter / X · 看到一个营销圈大 V(@DLW_Briefing)发了一条:*\n\n> "Hearing chatter about a brand X cancelling a tier-2 talent over FTC concerns + a subsequent contract breach claim. Will dig more next week."\n\n*没有点名 · 但圈子里能 decode 这是 Aurora。*\n*周末舆论会发酵 · 但你这一拳打到了实处。*`,
-        all_nighter: `*你 5:40 看到窗帘缝透进第一束光。*\n*你没睡。整夜。*\n*6:00 爬起来洗冷水脸 · 镜子里的你眼袋比昨天深了一层。*\n*7:15 出门 —— 比平时早 1 小时 · 因为反正也没睡。*`
-      },
-      body: `**周五 09:00**。\n\n你 8:45 进公司 · 比平时早 15 分钟 · 因为昨晚没睡好。\n\n—— 凌晨 3:11 · Aurora 项目群 · Nolan 转发 Sam 的语音 + 截图:\n\n> Nolan: 各位 sorry · Sam 凌晨 3 点用 **Cursor** 自己重写了 brief 终版 · 我刚醒看到 · 直接 paste 飞书表 v5\n> Nolan: brief 12 页 · 比 v4 多 8 页\n> Nolan: Sam 补一句:"AI Skills 模式部分我让 **Claude** 帮我写了 talking points · 大家照着用就行"\n> Nolan: ……我也是醒了才看到 · 你们看着办\n\n*Sam 凌晨 3 点。*\n*用 Cursor 写 brief 终版。*\n*让 Claude 写 talking points。*\n*"大家照着用就行。"*\n\n——\n\nEmma 09:30 邮件:\n\n> "{playerName} 早 · 脚本 v1 9 点之前给到了 · 飞书发你了\n> 我用 **Sora 2** 做了一个视觉草稿 · 1分钟 · 你看下感觉对不对\n> 但我想说 · Sam v5 brief 那 12 页我没读完 · 我刚做完瑜伽 · 你 highlight 一下重点行不"\n\n——\n\n**10:00**。\n\n你打开 Emma 脚本草稿:\n—— 1 分钟视觉:她在厨房 · 用客户产品 agent 模式 · 让 Skills 模式找菜谱 · 做出来一桌赛博菜。\n—— Sora 2 生成视觉 · 比真人拍快 100 倍 · 但脸有点不像 Emma 自己。\n—— 配音她自己录的 · 真人。\n\n——\n\n**10:30** · 阿布群里:\n\n> 阿布: @{playerName} · 这周 Aurora 收尾在你手上 · v5 brief + Emma 脚本 + Konstantin 答复 · 三件事 EOD:\n> 阿布: 1. v5 brief Emma 已 align(确认改不改)\n> 阿布: 2. KaptainK 退单 official 答复 Konstantin\n> 阿布: 3. RourkeHolly 36W 终版合同 ready to sign\n> 阿布: 三件事 · EOD · 谢谢两位老师\n\n(Jasper 周四下午请了半天年假 · 周五早 9:30 才进公司。)\n\n—— **10:55** · Nolan 私聊你:\n\n> Nolan: 老板凌晨 8 点又给我打电话说 'AI Skills 模式那段我再改一下吧'\n> Nolan: 我跟他说不行了\n> Nolan: 他说"好那就这版 · 但下周再 iterate"\n> Nolan: ……所以这版 lock\n\n*"finalized · 但下周再 iterate"。*\n*Nolan 跟你一样 victim。*`,
+      body: `**周五 09:00**。
+
+你 8:45 进公司 · 比平时早 15 分钟 · 因为昨晚没睡好。
+
+—— 凌晨 3:11 · Aurora 项目群 · Nolan 转发客户老板的语音:
+
+> Nolan: 各位 sorry · 老板凌晨 3 点用 **Cursor** 自己重写了 brief 终版 · 我刚醒看到 · 直接 paste 飞书表 v5
+> Nolan: brief 12 页 · 比 v4 多 8 页
+> Nolan: 老板补一句:「AI Skills 模式部分我让 **Claude** 帮我写了 talking points · 大家照着用就行」
+
+——
+
+Emma 09:30 邮件:
+
+> 「{playerName} 早 · 脚本 v1 9 点之前给到了 · 飞书发你了
+> 我用 **Sora 2** 做了一个视觉草稿 · 1 分钟 · 你看下感觉对不对
+> 但我想说 · v5 brief 那 12 页我没读完 · 你 highlight 一下重点行不」
+
+——
+
+**10:30** · 阿布群里:
+
+> 阿布: @{playerName} 这周 Aurora 收尾在你手上 · v5 brief + Emma 脚本 + Konstantin 答复 · 三件事 EOD
+
+—— **10:55** · Nolan 私聊:
+
+> Nolan: 老板凌晨 8 点又给我打电话说「AI Skills 模式那段我再改一下吧」
+> Nolan: 我跟他说不行了
+> Nolan: 他说「好那就这版 · 但下周再 iterate」`,
       choices: [
-        { key: "A", text: "*\"把 v5 brief highlight + 邮件 Emma:'三蟹 + Skills · 别带任何 client logo · 你 14:00 前如果改不动就这版过 · 我顶'。\"*", effects: { 决: 3, 共: 2, 规: 1, 险: -1 }, next: "N08", flag: "emma_script_locked" },
-        { key: "B", text: "*\"v5 brief 直接邮件转 Emma:'你看一遍 · 不对我们 14:00 邮件对一下'。\"* —— 然后改 3 个回合", effects: { 决: -1, 共: 1, 规: 2, 险: 1 }, next: "N08", flag: "emma_script_drift" },
-        { key: "C", text: "*\"微信阿布:'三件事我并行 · KaptainK 那边我建议您和 Vivian 一起拍板 · 我那边 hold'。\"*", effects: { 决: 2, 共: 1, 规: 2 }, next: "N08", flag: "kaptaink_to_director" },
-        { key: "D", text: "*\"打开 v5 brief 飞书 · 翻到 12 页底 · 你看到水印:\`Powered by PM-14 Engagement Engine · v5.04.17\`。\"*", effects: { 决: 1, 险: 3, 规: -1 }, next: "N08", item: "brief_engine_watermark", condition: s => s.items.has("hr_email_screenshot") }
+        { key: "A", text: "把 v5 brief highlight + 邮件 Emma:「三蟹 + Skills · 不带 client logo · 14:00 前如果改不动就这版过 · 我顶」。", cost: "Emma 这条线你今天扛了。\nKonstantin 那条线 · 你不会有时间分给它。", beat: "你按下发送。\n屏幕跳出 brief 文档底部 ——\n\n「Powered by **PM-14** Engagement Engine · v5.04.17」", effects: { 决: 3, 共: 2, 规: 1, 险: -1 }, next: "N08", item: "brief_engine_watermark", flag: "emma_script_locked" },
+        { key: "B", text: "v5 brief 直接转 Emma:「你看一遍 · 不对我们 14:00 邮件对一下」。", cost: "Emma 会改 · 改 3 个回合 · 你今天的时间会被她吞掉一半。", beat: "你转发完。\n再翻一遍 brief —— 翻到 12 页底:\n\n「Powered by **PM-14** Engagement Engine · v5.04.17」", effects: { 决: -1, 共: 1, 规: 2, 险: 1 }, next: "N08", item: "brief_engine_watermark", flag: "emma_script_drift" },
+        { key: "C", text: "微信阿布:「三件事我并行 · KaptainK 那边您和 Vivian 一起拍板」。", cost: "阿布会接 · 但他会觉得你今天「不愿意扛」。\n他会记得这一笔。", beat: "阿布回了一个「在」。\n\n*这是他第一次只回一个字。*", effects: { 决: 2, 共: 1, 规: 2 }, next: "N08", flag: "kaptaink_to_director" },
+        { key: "D", text: "*PM-14 这个词出现过几次了 ——* 翻 brief 找水印 · 截图存 awareness 文件夹。", cost: "这张截图加进去 · 是第 N 张。\n这一刻你已经不是「无意中察觉」· 是「主动收集证据」。", beat: "12 页底。\n小字。\n你截屏。\n\n「Powered by **PM-14** Engagement Engine · v5.04.17」", effects: { 决: 1, 险: 4, 规: -1 }, next: "N08", item: "brief_engine_watermark", flag: "documented_pm14_watermark", condition: s => s.items.has("hr_email_screenshot") }
       ]
     },
 
     N08: {
-      chapter: "第七章 · 周五的截稿日",
+      chapter: "第四章 · 周五的截稿日",
       title: "周五 15:00 · Mirror 数据表",
-      summary: "周五下午 · 你去打印间路过 4 楼会议室 · 半开门 · 桌上 Mirror 数据表",
-      task: "Aurora 周五 15:00 · 三件事推进中 · 路过 4 楼会议室",
+      summary: "周五 15:00 · Vivian Mirror review · 6 列字段 · 陆屿那一行高亮",
+      task: "周五 15:00 · Vivian 工位 · Mirror Project Cohort 14",
       weight: 5,
-      preludesByFlag: {
-        emma_script_locked: `*Emma 14:30 邮件回:"v2 我按你说的改完了 · 客户产品 logo 我藏成虚化背景 · 你看不行我再改。"*\n*你看了 · 行。*`,
-        emma_script_drift: `*Emma 14:00 改 / 14:30 改 / 14:50 改。*\n*v4 终于过 · 客户产品下午 5 点才 confirm。*`,
-        brief_engine_watermark: `*那个水印你又翻出来看了。*\n*"PM-14 Engagement Engine · v5.04.17"。*\n*"PM-14"这个字符串这周第几次出现你已经数不清 —— OA / 数据表水印 / brief 水印 · 它在不同地方反复出现 · 像在等你识别它。*`
-      },
-      body: `**14:55**。\n\nEmma 脚本 v2 14:45 confirmed。\nRourkeHolly 36W 合同 14:30 sign。\nKonstantin 那边 …… 北京 03:00(美西 12:00 PT)是周末 · 还在 hold。\n\n—— 你去打印间拿 Emma 合同的 hard copy。\n\n打印间。Jasper 站在打印机旁 · 抽出一摞 A4。\n你瞄了一眼最上面那张 —— **\`Q3 个人 OKR · KR3:适应力提升路径(Adaptability Uplift)\`**。\n\nJasper 跟你点头:"哦 · 你也来打东西啊。"\n他没解释。他端起咖啡走了。\n\n*"适应力提升路径"。*\n*这个词你在哪见过 —— 哦 · 周三早 OA 弹窗里好像也有过。*\n*你没多想。*\n*这个表 · 公司每个人 Q3 都要写 —— 连 Jasper 都写。*\n*没人多问一句 · 也没人停一下。*\n\n——\n\n你打印完 Emma 合同。\n出打印间 · 路过 4 楼小会议室 —— 门半开。\n桌上摊着一张 A3 数据表。\n表头:**\`Mirror Project · Cohort 14 · Behavioral Index\`**\n副标:\`PM-14 · WK17\`\n\n——\n\n你脚步停了 0.3 秒。\n\n—— 数据表 23 行 · 6 列。\n列名:**Name · Compliance · Resilience · Network · Decision-Making · Adaptability**\n\n第 11 行:\n\n> 11 · {playerName} · 0.71 · 0.42 · 0.58 · 0.55 · 0.49\n\n*你的名字。*\n*你的 N02A 问卷转化成的数字。*\n\n第 12 行:\n\n> 12 · Mila Chen · 0.31 · 0.18 · 0.34 · 0.22 · 0.71\n\n*Mila 的数字。*\n*她离职了 · 数字还在表上。*\n*Adaptability 0.71 —— 比你高 0.22 · 全表第二高。*\n*她很会点头。然而没用。*\n\n——\n\n表的最下方 · 字号小一号 · 是一段 \`Note · Index Definitions · Internal · Cohort Personnel use only\`:\n\n> **Compliance** · 项目群消息已读速度(<3min = green · 3-10min = amber · >10min = red)\n> **Resilience** · 20:00 后在线时长占比(本周 / 滚动 4 周加权)\n> **Network** · 团建 / 年会 / 部门聚餐到场率(全员 90 天滚动)\n> **Decision-Making** · 周报 / OKR 复盘按时提交率(连迟 2 周触发预警)\n> **Adaptability** · 直属上级讲话时点头次数 / 句(由会议室 1080p 摄像头逐句采样)\n\n*你看了一遍。*\n*再看了一遍。*\n*Compliance 0.71 = 你微信 3 分钟内已读。*\n*Resilience 0.42 = 你晚 8 点之后没那么常在线。*\n*Network 0.58 = 上次部门聚餐你去了一半就走。*\n*Decision-Making 0.55 = OKR 复盘你拖过两次。*\n*Adaptability 0.49 = 阿布讲话时你点头不够。*\n\n*合起来翻译过来 ——*\n*你这种打工人 · 在 PM-14 眼里就是一组 5 位的小数。*\n\n——\n\n你听到电梯叮一声。\n脚步声往这边来。`,
+      body: `**15:00**。
+
+Vivian 工位。
+她屏幕上一张 A3 数据表 ——
+表头:**Mirror Project · Cohort 14 · WK17**
+副标:\`PM-14 · v14.4-rc\`
+
+——
+
+23 行 · 6 列。
+
+> 列 1 · **心理画像置信度**
+> 列 2 · **自动化决策建议**(留任 / 重点关注 / 优化 / 淘汰)
+> 列 3 · **通知前操作时间戳**
+> 列 4 · **处置类别**(主动转岗 / PIP / 协议解除 / 直接终止)
+> 列 5 · **数据来源**(评估问卷 Part 1-3 / OA 行为日志 / 邮件元数据)
+> 列 6 · **模型版本**
+
+——
+
+第 11 行(高亮):
+
+> 11 · 陆屿 · **92.3%** · 淘汰 · **周一 16:42** · **直接终止** · Part 3/3 + OA + 邮件 · PM-14.4-rc
+
+*92.3%。*
+*直接终止。*
+*周一 16:42。*
+
+*答辩反馈 · 14:00 才结束。*
+
+——
+
+Vivian 看你看这行 · 没说话。
+
+过了一会 · 她说:
+
+「那孩子 · 心理素质其实特别好 · 我面试时印象就深。」`,
       choices: [
-        { key: "A", text: "*\"立刻退会议室 · 假装路过 · 别让任何人看到。\"*", effects: { 决: -1, 共: -1, 规: 3, 险: -1 }, next: "ENDING_GATE", flag: "mirror_walked_away" },
-        { key: "B", text: "*\"拍一张全表 · 退出。\"*", effects: { 决: 3, 共: 1, 规: -3, 险: 4 }, next: "ENDING_GATE", flag: "mirror_photographed", item: "mirror_screenshot" },
-        { key: "C", text: "*\"拍全表 + Mila 那行特写。\"*", effects: { 决: 4, 共: 3, 规: -4, 险: 5 }, next: "ENDING_GATE", flag: "mirror_mila_photographed", item: "mila_data_row" },
-        { key: "D", text: "*\"原地等 · 看进来的是谁。\"*", effects: { 决: 5, 共: 2, 规: -5, 险: 6 }, next: "ENDING_GATE", flag: "mirror_confronted_gordon", item: "gordon_confront", condition: s => s.items.has("hr_email_screenshot") }
+        { key: "A", text: "不发表意见 · 继续 review 下一条。", cost: "你看见了 · 你假装没看见。\n但 Vivian 知道你看见了。", beat: "你点头。\nVivian 翻到第 12 行。\n你看到自己的名字 —— **{playerName} · 0.71 · 重点关注 · / · / · Part 3/3 · PM-14.4-rc**。", effects: { 决: -1, 共: -1, 规: 3, 险: -1 }, next: "ENDING_GATE", flag: "mirror_walked_away" },
+        { key: "B", text: "截屏整张表。", cost: "这张截图存进 awareness 文件夹之后 · 你做的事就不是看见而已了。", beat: "你按下截屏。\n手机震了一下。\nVivian 看了你一眼 · 没说话。", effects: { 决: 3, 共: 1, 规: -3, 险: 4 }, next: "ENDING_GATE", item: "mirror_screenshot", flag: "mirror_photographed" },
+        { key: "C", text: "看陆屿那一行的元数据 · 截屏特写。", cost: "92.3% 这个数字 · 你这辈子不会忘了。", beat: "你点开第 11 行 metadata ——\n\n答辩反馈结束 · 14:00。\n操作时间戳 · 周一 16:42。\n\n*她在他还没下台 · 就改了字段。*", effects: { 决: 4, 共: 3, 规: -4, 险: 5 }, next: "ENDING_GATE", item: "lu_data_row", flag: "mirror_lu_photographed" },
+        { key: "D", text: "*Vivian「那孩子」那句 ——* 直接说:「周一 16:42 · 答辩反馈才 14:00 结束。」", cost: "你说出口的瞬间 · 这件事 · 不能再装作不知道了。\nVivian 也不能。", beat: "Vivian 沉默一会。\n\n「你早点知道也好。」", effects: { 决: 5, 共: 4, 规: -5, 险: 6 }, next: "ENDING_GATE", item: "lu_data_row", flag: "vivian_acknowledged", condition: s => s.items.has("lu_termination_metadata") }
       ]
     },
 
     ENDING_GATE: {
-      chapter: "第八章 · 周五 EOD",
+      chapter: "第五章 · 周五 EOD",
       title: "18:00 · EOD",
-      summary: "周五 EOD · Aurora 收尾 · 你的一周维度判定结局",
+      summary: "周五 EOD · Aurora 第一阶段收尾 · 系统判定中",
       task: "周五 EOD · 系统判定中",
       weight: 5,
-      body: `**18:00**。\n\nAurora 项目群 · 阿布发了一段总结:\n\n> 阿布: 各位收尾 · 周五 EOD 现状:\n> 阿布: 已签 8 / 处理中 1 (KaptainK Konstantin counter 周末解决) / 备选 2 下周补\n> 阿布: brief: v5 finalized · 客户老板下周 iterate\n> 阿布: 脚本 sample: EmmaPet v2 confirmed · JesseFun 自由发挥版周一给(他坚持周末不工作)\n> 阿布: 周五目标:全员定完 · 1-2 个 sample · 都达到了。\n> 阿布: 谢谢两位老师 · 周末好\n\n*"两位老师"。*\n*Mila 不在这个"两位"里 · 她周二就出局了。*\n*"两位"= 你 + Jasper。*\n\n——\n\n你看着这条总结 · 没立刻回。\n你打开飞书 · 把所有合同状态 review 了一遍。\n\n—— Aurora 第一阶段收尾。\n—— 但你心里很清楚:v5 brief 下周还要 iterate · RourkeHolly 36W mou 不是真合同 · Konstantin 周末必爆 · Emma 脚本只是 sample · 备选 2 人下周补谁补?\n\n——\n\n阿布 18:23 私聊:\n\n> "辛苦 · 周末好好歇 · 周一见。"\n\nVivian 18:25 不点你 · 但发了一句 channel 消息:\n\n> "Friday EOD · everyone go home."\n\n*她这句话像是给所有人 · 但你知道她看见你了。*\n\n——\n\n你的相册里有几张照片。\n你听见过几句不该听见的话。\n你撞见过几个不该撞见的人。\n\n——\n\n*系统判定中 ……*`,
+      body: `**18:00**。
+
+Aurora 项目群 · 阿布发了一段总结:
+
+> 阿布: 周五 EOD 现状 ——
+> 阿布: 已签 8 / 处理中 1 (KaptainK Konstantin 周末解决) / 备选 2 下周补
+> 阿布: brief v5 finalized · 客户老板下周 iterate
+> 阿布: 脚本 sample EmmaPet v2 confirmed
+> 阿布: 谢谢两位老师 · 周末好
+
+*「两位老师」。*
+*陆屿不在这个「两位」里 · 他周一就出局了。*
+
+——
+
+阿布 18:23 私聊:
+
+> 「辛苦 · 周末好好歇 · 周一见。」
+
+Vivian 18:25 channel 消息:
+
+> 「Friday EOD · everyone go home.」
+
+——
+
+你的相册里有几张照片。
+你听见过几句不该听见的话。
+你撞见过几个不该撞见的人。
+
+——
+
+*系统判定中 ……*`,
       choices: [
-        { key: "A", text: "*\"收拾东西 · 走人。\"*", effects: {}, next: s => {
+        { key: "A", text: "收拾东西 · 走人。", effects: {}, next: s => {
           const aw = awarenessCount();
-          if (aw >= 4) return "E_PM14";
-          const letters = computeLetters(s.stats);
-          // 决高共中规高险低 = A 上岸
-          if (s.stats.决 >= 8 && s.stats.规 >= 6 && s.stats.险 <= 4) return "E_NORMAL";
-          // 决高共低规中险高 = B 执剑人
-          if (s.stats.决 >= 8 && s.stats.共 <= 3 && s.stats.险 >= 6) return "E_BLADE";
-          // 决中共高规中险中 = C Plan B 在身
-          if (s.stats.共 >= 7 && s.stats.决 >= 4) return "E_PLANB";
-          // 默认 D 装糊涂大师
+          // v3 §1.5 觉察值门控:满 10 → N09 真结局
+          if (aw >= 10) return "N09";
+          // 否则按四维路由(7-9 / 4-6 / 0-3 的 tier 在各 ending body 里显示)
+          if (s.stats.决 >= 4 && s.stats.险 >= 4) return "E_BLADE";
+          if (s.stats.决 >= 4 && s.stats.规 >= 4) return "E_NORMAL";
+          if (s.stats.共 >= 4 && s.stats.规 >= 4) return "E_PLANB";
           return "E_NUMB";
         } }
       ]
@@ -1725,47 +2142,53 @@ Jasper 上午 10:30 拍你肩:
       bossView: null
     },
 
-    E_PM14: {
-      label: "E_PM14 · 未命名",
-      title: "未命名 - 1",
+    N09: {
+      label: "N09 · 未命名 - 已发送",
+      title: "未命名 - 已发送",
       body: `**周五 23:47**。
 
-你回家。打开手机相册 · 翻 awareness 文件夹。
-照片不多 —— 大半线索是你**听到的、错收的、看见但没拍的**。
-但每一条你都记得在哪个时刻。
+你回家。打开电脑。新建文件夹 ——「未命名 - 1」。
+
+把这一周所有觉察道具拖进去 ——
+HR 邮件 ^_^ 截图。
+飞书字段 metadata。
+Mirror Auth v14 角落。
+陆屿那条「我等下答辩」。
+Vivian 那句「用一周后没人会再提起」。
+Mirror 数据表 6 列。
+陆屿那一行 · 92.3% · 直接终止 · 周一 16:42。
 
 ——
 
-你打开外卖 · 扫码点了一份煎饼。
-摊主问"加蛋吗"。
-你说"加两个"。
+你面前有 4 个动作。
+
+> 1. 递律师 —— 劳动仲裁 · 陆屿拿巨额和解
+> 2. 递 Vivian —— 她周一董事会上拿出来
+> 3. 递 DLW newsletter —— PM-14 公开
+> 4. 递监管 —— 网信办 + 人社局 · Seraphine 被约谈
 
 ——
 
-你回到家。
-打开电脑。
-新建一个文件夹。
+**周日 23:59**。
 
-光标停在重命名上。
-你打了几个字 · 又删了。
-
-最后保存成 **"未命名 - 1"**。
-
-你把所有觉察相关的截图 / 邮件 header / 飞书字段元数据 / Vivian 的那句话(你只在心里记着) / Gordon 那 5 秒沉默(你也没法存)
-能拖的拖进去。
-不能拖的 · 你写在备忘录最上面一行。
+文件夹「未命名 - 1」重命名为「**已发送**」。
 
 ——
 
-**周一八点闹钟。**
-**你定了。**
-**你睡了。**
+你手机最后一条信息是陆屿周一那条:
+
+> 我等下答辩 谢谢你周末帮我看
+> [ 转正答辩 v3 final.pdf ]
+
+你没回。
+你不知道怎么回。
 
 ——
 
-*你不知道周一你会不会打开"未命名 - 1"。*
-*也不知道你打开它的时候 · 会做什么。*`,
-      totalAccount: "你这一周看见了一些东西 · 但你没行动。你只是把它们存在了一个叫「未命名 - 1」的文件夹里 · 设了闹钟 · 睡了。明天 · 你还是要去那个电梯。",
+*你做这件事 · 陆屿永远不会知道是你。*
+
+*屏幕暗下来。*`,
+      totalAccount: "你看见了 · 你做了。陆屿拿到一笔巨额和解 · Seraphine 被监管约谈 · PM-14 在行业媒体里被公开。但他永远不会知道是你。这是不自觉欲望被自觉欲望牺牲的瞬间 —— 你用揭穿系统 · 交换了陆屿认你这份情。",
       bossView: null
     }
 
@@ -1938,6 +2361,7 @@ const PERSONALITY = {
 // ============================================================
 const state = {
   playerName: "",
+  playerGender: "",
   currentNode: null,
   stats: { 决: 0, 共: 0, 规: 0, 险: 0 },
   items: new Set(),
@@ -1949,8 +2373,9 @@ const state = {
 
 window.__state = state; // debug
 
-function resetState(name) {
+function resetState(name, gender) {
   state.playerName = name;
+  state.playerGender = gender || "";
   state.currentNode = null;
   state.stats = { 决: 0, 共: 0, 规: 0, 险: 0 };
   state.items.clear();
@@ -1987,10 +2412,11 @@ function applyChoice(nodeId, choiceKey) {
 // tag = 关系标签 · role = 身份 · vibe = 性格速写 · 暗线信息一律不写,仅记主线明面身份
 const NPC_PROFILES = {
   // 内部团队
-  "阿布":      { tag: "你的 AM",    role: "AM · 这个项目的 owner",       vibe: "客户挤压他他挤压你 · 但本质不是坏人" },
+  "阿布":      { tag: "你的 AM",    role: "AM · 这个项目的 owner",       vibe: "客户挤压他他挤压你 · 但本质不是坏人", portrait: "assets/abu.png?v=2" },
   "Jasper":    { tag: "你的同事",   role: "资深运营",                     vibe: "腹黑 嘴炮型 · 活儿干得快 走的还比你早" },
   "Vivian":    { tag: "你的总监",   role: "你的直属总监",                 vibe: "平时存在感低" },
   "米拉":      { tag: "你的下属",   role: "快转正的实习生",                 vibe: "紧张但努力 · KPI 112% · 转正答辩材料周日发你 review 了" },
+  "陆屿":      { tag: "你的搭档",   role: "Aurora 副对接 · 入职 6 周的实习生", vibe: "北大 + Berkeley · 父亲是某新消费品牌联创 · 自起外号「小帅」 · 周日 23:47 还在改 v3 final", portrait: "assets/luyu.png?v=2" },
   "Gordon":    { tag: "顾问(挂名)", role: "顾问",                        vibe: "帽衫兜帽党 · 来无影去无踪 · 没人说得清他干嘛的" },
   "Seraphine": { tag: "HR 总监",    role: "HR 总监",                      vibe: "邮件全用 ^_^ 签名 · 微笑保持精确 · 关心你「最近还好吗」那种关心法" },
   // 客户
@@ -2014,6 +2440,7 @@ const NPC_PROFILES = {
 // ---- 道具/flag 的展示文案(公文包 UI 用) ----
 const ITEM_LABELS = {
   hr_email_screenshot:        { name: "HR 心理评估邮件截图", note: "N01 D · Seraphine 签名 ^_^ · 入口仪式 · 暗线钥匙" },
+  lu_review_seraphine_present:{ name: "陆屿答辩 reviewer 名单 · 越权", note: "N02 D · 你下楼问出来了 · Seraphine 跨级进入了答辩 reviewer" },
   v2_screenshot:              { name: "筛选漏斗截图 · PM-14", note: "N03 D · 飞书表底水印闪过" },
   vivian_quote:               { name: "Vivian 的金句", note: "「达人是巨婴 · 客户也是巨婴 · 都是在哄婴儿」" },
   vivian_quote_overheard:     { name: "Vivian 给 Jasper 那条原话", note: "NT2 D · 茶水间偷听 · 米拉答不上 follow-up" },
@@ -2031,18 +2458,20 @@ const ITEM_LABELS = {
 
 // ---- 察觉类道具/flag 门槛(隐藏结局触发用 · 任意持有 ≥ 4 触发 E_PM14)----
 // hr_email_screenshot 不计入 · 它是入口钥匙不是觉察证据
+// v3 §4.2 · 10 项觉察道具(主动 5 + 被动 5)· 满 10 触发 N09 真结局
 const AWARENESS_MARKS = [
-  "vivian_quote",
-  "vivian_quote_overheard",
-  "vivian_mila_truth",
-  "bcc_awareness_header",
+  // 主动 5 项(D 选项触发)
+  "hr_email_screenshot",
+  "lu_review_seraphine_present",
   "saw_mirror_auth",
-  "mila_termination_metadata",
+  "lu_termination_metadata",
   "director_endorsement",
+  // 被动 5 项(默认选项触发)
+  "vivian_quote",
+  "bcc_awareness_header",
   "brief_engine_watermark",
   "mirror_screenshot",
-  "mila_data_row",
-  "gordon_confront"
+  "lu_data_row"
 ];
 // 反制武器 — 不计入觉察池(避免反制路径意外触发 PM-14),但 ending 单独成框显示
 const WEAPONS_MARKS = [
@@ -2091,7 +2520,7 @@ function lettersToKey(letters) {
 const $game = document.getElementById("game");
 
 // 人名自动识别表(auto-wrap 最后一步执行)
-const NPC_INTERNAL_RE = /(阿布|Jasper|Vivian|米拉|Gordon|Seraphine|Nolan|Sam)/g;
+const NPC_INTERNAL_RE = /(阿布|Jasper|Vivian|陆屿|米拉|Gordon|Seraphine|Nolan|Sam)/g;
 // KOL 完整名必须在短名之前(regex alternation 左优先)· Emma Nguyen > EmmaPet · 已移除 v2.1 旧名 Julia/Emma
 const NPC_KOL_RE = /(RourkeHolly|Emma Nguyen|EmmaPet|KaptainK|TechPeter|Konstantin|JesseFun|TechSarah|PetMolly|NoTechBro|AsiaVina|SportTim)/g;
 
@@ -2167,38 +2596,54 @@ function renderStartScreen() {
         <div class="start-subtitle-en">KOL SURVIVOR</div>
         <div class="start-tagline">一个关于选择、咖啡和 KOL 的短剧</div>
 
-        <div class="role-pick-head">选择你的视角</div>
-        <div class="role-grid">
-          <div class="role-card available" data-role="ops">
-            <div class="role-icon">💼</div>
-            <div class="role-name">运营</div>
-            <div class="role-desc">夹在 AM 和达人中间 · 一周凑齐 15 个海外达人</div>
-            <div class="role-status">已开放</div>
-          </div>
-          <div class="role-card locked" data-role="am">
-            <div class="role-icon">🤝</div>
-            <div class="role-name">AM</div>
-            <div class="role-desc">客户挤压你 · 你挤压运营 · 你也是夹心层</div>
-            <div class="role-status">即将开放</div>
-          </div>
-          <div class="role-card locked" data-role="boss">
-            <div class="role-icon">👔</div>
-            <div class="role-name">Boss</div>
-            <div class="role-desc">你看 PM-14 数据表 · 决定谁转正 · 谁出局</div>
-            <div class="role-status">即将开放</div>
-          </div>
-          <div class="role-card hidden-task" data-role="hidden">
-            <div class="role-icon">?</div>
-            <div class="role-name">???</div>
-            <div class="role-desc">等你发现</div>
-            <div class="role-status">隐藏任务</div>
+        <div id="role-step">
+          <div class="role-pick-head">选择你的视角</div>
+          <div class="role-grid">
+            <div class="role-card available" data-role="ops">
+              <div class="role-icon">💼</div>
+              <div class="role-name">运营</div>
+              <div class="role-desc">夹在 AM 和达人中间 · 一周凑齐 15 个海外达人</div>
+              <div class="role-status">已开放</div>
+            </div>
+            <div class="role-card locked" data-role="am">
+              <div class="role-icon">🤝</div>
+              <div class="role-name">AM</div>
+              <div class="role-desc">客户挤压你 · 你挤压运营 · 你也是夹心层</div>
+              <div class="role-status">即将开放</div>
+            </div>
+            <div class="role-card locked" data-role="boss">
+              <div class="role-icon">👔</div>
+              <div class="role-name">Boss</div>
+              <div class="role-desc">你看 PM-14 数据表 · 决定谁转正 · 谁出局</div>
+              <div class="role-status">即将开放</div>
+            </div>
+            <div class="role-card hidden-task" data-role="hidden">
+              <div class="role-icon">?</div>
+              <div class="role-name">???</div>
+              <div class="role-desc">等你发现</div>
+              <div class="role-status">隐藏任务</div>
+            </div>
           </div>
         </div>
 
-        <form class="start-input-wrapper hidden" id="start-form" autocomplete="off">
-          <input class="start-input" id="start-name-input" placeholder="输入你的名字" maxlength="10" />
-          <button class="start-btn" type="submit">开 始 游 戏</button>
-        </form>
+        <div id="gender-step" class="gender-step" hidden>
+          <button class="gender-back" id="gender-back" type="button">← 返回视角选择</button>
+          <div class="role-pick-head">选择你的主角</div>
+          <div class="gender-grid">
+            <div class="gender-card" data-gender="m">
+              <img class="gender-portrait" src="assets/zhujuenan.png?v=2" alt="男主">
+              <div class="gender-label">他</div>
+            </div>
+            <div class="gender-card" data-gender="f">
+              <img class="gender-portrait" src="assets/zhujuenv.png?v=2" alt="女主">
+              <div class="gender-label">她</div>
+            </div>
+          </div>
+          <form class="start-input-wrapper hidden" id="start-form" autocomplete="off">
+            <input class="start-input" id="start-name-input" placeholder="输入你的名字" maxlength="10" />
+            <button class="start-btn" type="submit">开 始 游 戏</button>
+          </form>
+        </div>
       </div>
     </div>
   `;
@@ -2206,16 +2651,20 @@ function renderStartScreen() {
   const form = document.getElementById("start-form");
   const input = document.getElementById("start-name-input");
 
+  // v3 · 两步选择:Step1 视角 → Step2 性别
+  let selectedGender = null;
+  const roleStep = document.getElementById("role-step");
+  const genderStep = document.getElementById("gender-step");
+  const genderBack = document.getElementById("gender-back");
+
   // 角色卡片点击逻辑
   document.querySelectorAll(".role-card").forEach(card => {
     card.addEventListener("click", () => {
       const role = card.dataset.role;
       if (role === "ops") {
-        // 选中运营 · 显示输入框
-        document.querySelectorAll(".role-card").forEach(c => c.classList.remove("selected"));
-        card.classList.add("selected");
-        form.classList.remove("hidden");
-        input.focus();
+        // 进入性别选择步骤
+        roleStep.hidden = true;
+        genderStep.hidden = false;
       } else if (role === "hidden") {
         // 隐藏任务彩蛋:显示一行 metadata
         card.classList.toggle("revealed");
@@ -2235,10 +2684,30 @@ function renderStartScreen() {
     });
   });
 
+  // 性别卡片点击
+  document.querySelectorAll(".gender-card").forEach(card => {
+    card.addEventListener("click", () => {
+      document.querySelectorAll(".gender-card").forEach(c => c.classList.remove("selected"));
+      card.classList.add("selected");
+      selectedGender = card.dataset.gender;
+      form.classList.remove("hidden");
+      input.focus();
+    });
+  });
+
+  // 返回视角选择
+  genderBack.addEventListener("click", () => {
+    genderStep.hidden = true;
+    roleStep.hidden = false;
+    selectedGender = null;
+    document.querySelectorAll(".gender-card").forEach(c => c.classList.remove("selected"));
+    form.classList.add("hidden");
+  });
+
   form.addEventListener("submit", e => {
     e.preventDefault();
     const name = input.value.trim() || "阿华";
-    resetState(name);
+    resetState(name, selectedGender || "m");
     goTo("N01");
   });
 }
@@ -2246,7 +2715,7 @@ function renderStartScreen() {
 // ---- 时间线 HUD · 根据 nodeId 推断工作日(v3 final 17 节点)----
 const DAY_MAP = {
   // 周一
-  N01: 1, N02A: 1, N03: 1, N04B: 1,
+  N01: 1, N02: 1, N03: 1, N04B: 1,
   // 周二(NT1 拆成 NT1A 站会本体 + NT1B 米拉走过)
   NT1A: 2, NT1B: 2, NT2: 2, NT3: 2,
   N_TUE_NIGHT: 2,  // 周二夜过渡节点
@@ -2372,6 +2841,32 @@ function closeToast(toast) {
   setTimeout(() => toast.remove(), 400);
 }
 
+// v3 · 代价即时显形浮窗 · 选完 choice 后弹出 · 演出 cost · 手动按钮确认 · 不倒计时
+function showConsequenceBeat(beatText, onDismiss) {
+  document.querySelectorAll('.consequence-beat').forEach(el => el.remove());
+  const lines = beatText.split('\n').filter(l => l.trim()).map(l => `<p>${renderMarkdownInline(l.trim())}</p>`).join('');
+  const beat = document.createElement('div');
+  beat.className = 'consequence-beat';
+  beat.innerHTML = `
+    <div class="consequence-beat-head">— 这一刻 —</div>
+    <div class="consequence-beat-body">${lines}</div>
+    <button type="button" class="consequence-beat-btn">继 续</button>
+  `;
+  document.body.appendChild(beat);
+  requestAnimationFrame(() => beat.classList.add('show'));
+  let dismissed = false;
+  const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
+    beat.classList.remove('show');
+    setTimeout(() => {
+      beat.remove();
+      if (onDismiss) onDismiss();
+    }, 380);
+  };
+  beat.querySelector('.consequence-beat-btn').addEventListener('click', dismiss);
+}
+
 function renderTimeline(nodeId) {
   const day = currentDay(nodeId);
   const days = ["周一", "周二", "周三", "周四", "周五"];
@@ -2443,8 +2938,12 @@ function renderNode(nodeId, opts) {
     if (choice.key === flashKey) cls += " just-unlocked";
     // 显示 key 按可见顺序:A, B, C, D —— 隐藏选项不留字母缺口,避免被 spoil
     const displayKey = String.fromCharCode(65 + idx);
+    const costHtml = choice.cost
+      ? `<span class="choice-cost">${renderMarkdownInline(choice.cost)}</span>`
+      : "";
     return `<button class="${cls}" data-key="${choice.key}">
       <span class="choice-key">${displayKey}</span>${renderMarkdownInline(choice.text)}
+      ${costHtml}
     </button>`;
   }).join("");
 
@@ -2484,10 +2983,19 @@ function renderNode(nodeId, opts) {
         b.style.opacity = b.classList.contains("disabled") ? "0.2" : "0.55";
       });
       const key = btn.dataset.key;
+      const choice = node.choices.find(c => c.key === key);
       const next = applyChoice(nodeId, key);
       if (!next) { locked = false; return; }
-      window.scrollTo(0, 0);
-      goTo(next);
+      const proceed = () => {
+        window.scrollTo(0, 0);
+        goTo(next);
+      };
+      // v3 · L1 代价即时显形:choice 有 beat → 先弹浮窗演出代价 · dismiss 后再 goTo
+      if (choice && choice.beat) {
+        showConsequenceBeat(replacePlaceholders(choice.beat), proceed);
+      } else {
+        proceed();
+      }
     });
   });
 
@@ -2551,7 +3059,23 @@ function renderEnding(endingId) {
   const personalityKey = lettersToKey(letters);
   const persona = PERSONALITY[personalityKey] || PERSONALITY._DEFAULT;
 
-  const endingBodyHtml = bodyToHtml(ending.body);
+  // v3 §1.5 觉察 tier 段(陆屿后续):4 个非真结局根据 awareness 加陆屿后续段
+  // N09 是真结局 · 不加 tier
+  let bodyText = ending.body;
+  if (endingId !== "N09") {
+    const aw = awarenessCount();
+    let tier = "";
+    if (aw >= 7) {
+      tier = `\n\n——\n\n*周一 09:00 · 你收到一封陌生律师邮件:*\n\n> 「我们代理陆屿先生 · 已就劳动仲裁立案 · N+3 通过。」\n\n*他不知道是你递的证据。*\n*但他这周末 · 终于能睡着了。*`;
+    } else if (aw >= 4) {
+      tier = `\n\n——\n\n*周一 10:00 · 陆屿微信:*\n\n> 在么 · 我手上一份推荐信你能不能帮我签个字\n\n*你签了 · 没多说。*\n*他去了上海一家小机构。*`;
+    } else {
+      tier = `\n\n——\n\n*周一 09:00 · 陆屿那条对话框 · 灰色。*\n*头像没换 —— 但「最近在线」这一栏空了。*\n*这周你不会再听到他的消息。*`;
+    }
+    bodyText = bodyText + tier;
+  }
+
+  const endingBodyHtml = bodyToHtml(bodyText);
   const lettersDisplay = letters.join(" ");
 
   const statsStr = `决 ${formatStat(state.stats.决)} · 共 ${formatStat(state.stats.共)} · 规 ${formatStat(state.stats.规)} · 险 ${formatStat(state.stats.险)}`;
@@ -2646,6 +3170,14 @@ window.jumpEnding = (id) => {
     card.querySelector('.npc-popup-name').textContent = name;
     card.querySelector('.npc-popup-role').textContent = profile.role || '';
     card.querySelector('.npc-popup-vibe').textContent = profile.vibe || '';
+    const img = card.querySelector('.npc-popup-portrait');
+    if (profile.portrait) {
+      img.src = profile.portrait;
+      img.classList.add('has');
+    } else {
+      img.removeAttribute('src');
+      img.classList.remove('has');
+    }
     return true;
   }
 
