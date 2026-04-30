@@ -1233,73 +1233,77 @@ const STORY = {
     N01: {
       chapter: "第一章 · 又一个周一",
       title: "9:30 那场答辩",
-      summary: "周一 9:32 · 你迟到 2 分钟 · 陆屿答辩已开始",
+      summary: "今天是陆屿答辩的日子,而你却忘了帮他 review 答辩文档",
       task: "9:32 · 三条同时戳你 · HR / 客户 / 陆屿",
       weight: 3,
-      body: `电梯到二十三楼。出来才想起 —— 今天 9:30 是陆屿的转正答辩。
+      body: `电梯到二十三楼。出来你才想起 —— 今天是陆屿的转正答辩的日子。
 
-现在 9:32。
-
-*他周日 23:47 发你 review。你睡着了。*
+*他昨晚半夜 11 点半发你答辩新版本 想让你帮忙看看,结果你睡着了。*
 
 ——
 
-邮箱 142 未读。置顶 HR-System:
+你火急火燎到了工位
+邮箱冒出了通知
+**45 封未读**,请查收。
+
+*这时候你的心情有点微妙,有上周五播种的邮件有了收获的喜悦,也有工作的烦躁。*
+
+被强制置顶的是 HR 的邮件:
 
 > **【请完成新入职心理评估 · Part 3/3】**
 >
 > —— HR Seraphine {{unlock_n01|^_^}}
 
-做这行三年,你见过的 HR 没一个签名画 ^_^。
+Seraphine 今天怎么带了 Emoji 了,之前语气都是冷冰冰的哎。
 
 ——
 
 **阿布 · 微信 9:33**
 
-> Aurora 客户说昨天名单不够精准 今天再找点
-> 还有 客户这周开始**比价**了 你知道我意思吧
+> Aurora 这个客户说昨天名单不够精准 今天需要再找点
+> 还有 客户说他们找了多家 agency 估计要**比价**了
 
 ——
 
 **陆屿 · 微信 9:35**
 
-> 我等下答辩 谢谢你周末帮我看
-> [ 转正答辩 v3 final.pdf ]
+> {addr},你觉得我的答辩文档怎么样?
 
-*他发的是 v3 final。你昨晚看的是 v2。*`,
+*你打开电脑微信,那个文档甚至还没被下载下来。*`,
       choices: [
-        { key: "A", text: "陆屿先 —— 给他打段长语音 · 周末没看完抱歉 · 答辩你信他 · 中午吃饭。", cost: "阿布会在上司那告你一状 · 说你效率低下。", beat: "**9:55**。\n阿布群里 · @ 你 · 第三次。\n「人呢」", effects: { 决: 1, 共: 3, 规: -1, 险: 1 }, next: "N02", flag: "prioritized_lu" },
-        { key: "B", text: "客户先 —— 回阿布「中午前给你」 · 打开 ezzzyKOL 翻人。陆屿那条不回。", cost: "陆屿拿着你没看过的答辩文档 · 赶鸭子上架参加了答辩。", beat: "**13:42**。\n你翻到 ezzzyKOL 第 14 个。\n陆屿那条「我等下答辩」· 灰色 · 没有「对方正在输入」。", effects: { 决: 2, 共: -2, 规: 2, 险: -1 }, next: "N02", flag: "chose_client_over_lu" },
-        { key: "C", text: "先解决弹窗 —— 阿布「在看」 · 陆屿不回 · 先把 HR 那个 Part 3/3 填了。", cost: "阿布、陆屿对你的好感度 · 都降低了。", beat: "**10:05**。\nHR 弹窗 · 还在等。\n阿布微信:?\n陆屿那条 · 已读未回。", effects: { 决: -1, 共: -1, 规: 1, 险: 1 }, next: "N02", flag: "ducked_everything" },
-        { key: "D", text: "*这个签名让你想存档 ——* 截图 Seraphine 这封 · 存进相册。回阿布「在看」 · 陆屿不回。", cost: "陆屿在等你回一句加油 · 你存了一张 HR 邮件截图。", beat: "你按下截屏。\n再抬头 · **9:36**。\n陆屿那条「我等下答辩」· 灰了。\n不会再有第二条。", effects: { 决: 1, 共: -1, 规: 1, 险: 1 }, next: "N02", item: "hr_email_screenshot", flag: "archived_hr_screenshot", condition: s => s.flags.has("unlock_n01") }
+        { key: "A", text: "先看陆屿的答辩文档。", cost: "阿布会在上司那告你一状 · 说你效率低下。", beat: "**9:55**。\n阿布群里 · @ 你 · 第三次。\n「人呢」", effects: { 决: 1, 共: 3, 规: -1, 险: 1 }, next: "N02", flag: "prioritized_lu" },
+        { key: "B", text: "先不管陆屿了 · 回阿布「中午前给你」 · 打开 ezzzyKOL 翻人。", cost: "陆屿拿着你没看过的答辩文档 · 赶鸭子上架参加了答辩。", beat: "**13:42**。\n陆屿下午去了答辩。\n你看着他的背影 · 总有点不详的预感。", effects: { 决: 2, 共: -2, 规: 2, 险: -1 }, next: "N02", flag: "chose_client_over_lu" },
+        { key: "C", text: "先把那测评做了吧 · 把简单的事先排前面。", cost: "阿布、陆屿对你的好感度 · 可能都会降低。", beat: "**10:05**。\nHR 弹窗 · 「感谢填写哦 ^_^」。\n阿布微信:?\n陆屿下午去了答辩 · 你看着他的背影 · 总有点不详的预感。", effects: { 决: -1, 共: -1, 规: 1, 险: 1 }, next: "N02", flag: "ducked_everything" },
+        { key: "D", text: "*这个签名让你总感觉有点怪 ——* 截图 Seraphine 这封 · 存进相册。", cost: "阿布、陆屿对你的好感度 · 可能都会降低。", beat: "你按下截屏。\n阿布微信:?\n陆屿下午去了答辩 · 你看着他的背影 · 总有点不详的预感。", effects: { 决: 1, 共: -1, 规: 1, 险: 1 }, next: "N02", item: "hr_email_screenshot", flag: "archived_hr_screenshot", condition: s => s.flags.has("unlock_n01") }
       ]
     },
 
     N02: {
       chapter: "第一章 · 又一个周一",
-      title: "14:50 在吗 楼下喝个咖啡",
-      summary: "周一 14:50 · 陆屿答辩反馈结束 · 他约你下楼 · 你不知道他要说什么",
-      task: "14:50 · 陆屿约你下楼 · Aurora 名单缺 3 人 EOD",
+      title: "15:50 在吗 楼下喝个咖啡",
+      summary: "周一 15:50 · 陆屿答辩反馈结束 · 他约你下楼 · 你不知道他要说什么",
+      task: "15:50 · 陆屿约你下楼 · Aurora 名单还缺 3 人",
       weight: 2,
-      body: `14:00 陆屿答辩+反馈会结束。
+      body: `**15:50** 陆屿答辩+反馈会结束。
 
-Seraphine 和阿布跟他说:「我们再和 leadership 确认 · EOD 给答复。」
+你听到他们出会议室的时候,Seraphine 跟他说:「我们会再和 leader 确认 · 今天给你反馈。」
 
-14:00–14:50 陆屿在工位。三小时没说话。
+14:00–15:50 陆屿在工位。三小时没说话。
 
 ——
 
-Aurora 名单 EOD 要交。你 8 个候选 · 缺 3 个。
+Aurora 名单今天要给一批新的,还差 3 个人没补齐。
+
 阿布 13:50 在群里 @ 过你一次。
 
 ——
 
-**陆屿 · 微信 14:50**
+**陆屿 · 微信 15:50**
 
-> 在吗 楼下喝个咖啡
+> {addr} 在吗 楼下喝个咖啡不
 
 *他还没收到答辩结果。*
-*你猜他想说什么。*`,
+*不知怎么 · 你心里还是有点不安。*`,
       choices: [
         { key: "A", text: "现在下去 —— 回「在 我下来」。Aurora 那 3 个回家补。", cost: "Aurora 名单今晚补不完 · 阿布会群里点你三次。\n陆屿会塞你点东西 · 不会解释这是什么。", beat: "楼下星巴克。\n你坐下还没几分钟 · 他手机震了一下。\n屏幕亮起 · 写着「**爸**」。\n他看了一眼 · 按了拒接 · 放回口袋。\n问你「刚才你说什么来着」。", effects: { 决: 1, 共: 3, 规: -2, 险: 1 }, next: "N03", flag: "went_down_immediately" },
         { key: "B", text: "半小时后 —— 回「半小时 我把这单发完下去」 · 把当前邮件发了再说。", cost: "陆屿等你下楼时 · 挂了一个电话 · 你来了他没说话。\n他给你留了点东西 · 没贴条。", beat: "便利店门口的小台阶上。\n他坐着 · 手里捧着手机。\n屏幕黑了。\n像是刚挂掉一个电话 · 又没去打开下一个 app。", effects: { 决: 1, 共: 0, 规: 1, 险: 0 }, next: "N03", flag: "went_down_late" },
@@ -2553,6 +2557,8 @@ function renderMarkdownInline(s) {
 
 function replacePlaceholders(s) {
   let out = s.replace(/\{playerName\}/g, state.playerName || "你");
+  // {addr} · 陆屿等 NPC 对玩家的称呼 · 男主"哥" / 女主"姐"
+  out = out.replace(/\{addr\}/g, state.playerGender === "f" ? "姐" : "哥");
   if (out.includes("{playerType}")) {
     const letters = computeLetters(state.stats);
     out = out.replace(/\{playerType\}/g, letters.join(""));
