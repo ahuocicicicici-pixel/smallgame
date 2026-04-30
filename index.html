@@ -1305,10 +1305,10 @@ Aurora 名单今天要给一批新的,还差 3 个人没补齐。
 *他还没收到答辩结果。*
 *不知怎么 · 你心里还是有点不安。*`,
       choices: [
-        { key: "A", text: "现在下去 —— 回「在 我下来」。Aurora 那 3 个回家补。", cost: "Aurora 名单今晚补不完 · 阿布会群里点你三次。\n陆屿会塞你点东西 · 不会解释这是什么。", beat: "楼下星巴克。\n你坐下还没几分钟 · 他手机震了一下。\n屏幕亮起 · 写着「**爸**」。\n他看了一眼 · 按了拒接 · 放回口袋。\n问你「刚才你说什么来着」。", effects: { 决: 1, 共: 3, 规: -2, 险: 1 }, next: "N03", flag: "went_down_immediately" },
-        { key: "B", text: "半小时后 —— 回「半小时 我把这单发完下去」 · 把当前邮件发了再说。", cost: "陆屿等你下楼时 · 挂了一个电话 · 你来了他没说话。\n他给你留了点东西 · 没贴条。", beat: "便利店门口的小台阶上。\n他坐着 · 手里捧着手机。\n屏幕黑了。\n像是刚挂掉一个电话 · 又没去打开下一个 app。", effects: { 决: 1, 共: 0, 规: 1, 险: 0 }, next: "N03", flag: "went_down_late" },
-        { key: "C", text: "改约晚上 —— 回「今天搞不开 晚上一起吃饭?」 · 继续翻 ezzzyKOL。", cost: "陆屿那条对话 · 之后不会再有动静。", beat: "他回「**好**」。\n一个字。\n屏幕又黑了。", effects: { 决: 1, 共: -3, 规: 1, 险: -1 }, next: "N03", flag: "rescheduled_dinner" },
-        { key: "D", text: "*这个签名 ——* 你下楼 · 第一句问的是:「你答辩 reviewer 名单里有 Seraphine 吗?」", cost: "陆屿想给你的那个东西 · 这次不会到你手上。\n他帮你过完名单之后 · 不会再像上午那样回你。", beat: "他塞回包之后 · 手机震了一下。\n屏幕亮起 · 写着「**爸**」。\n他看了一眼 · 按了拒接 · 没解释。\n他说「我得回上去 · Aurora 那个名单我帮你再过一遍」。", effects: { 决: 2, 共: -1, 规: -1, 险: 3 }, next: "N03", item: "lu_review_seraphine_present", flag: "asked_about_seraphine", condition: s => s.items.has("hr_email_screenshot") }
+        { key: "A", text: "现在下去 —— 回「来了」。Aurora 那 3 个晚点补。", cost: "Aurora 名单今晚补不完 · 阿布可能又要去告状。", beat: "楼下星巴克。\n你坐下还没几分钟 · 他手机震了一下。\n屏幕亮起 · 写着「**爸**」。\n他看了一眼 · 按了拒接 · 放回口袋。\n\n他和你聊了一会 · 临走时递了个小纸袋过来 · 沉沉的 · 印着 Pop Mart 的折角。\n「等下回去拆 · 别在这儿。」", effects: { 决: 1, 共: 3, 规: -2, 险: 1 }, next: "N03", flag: "went_down_immediately" },
+        { key: "B", text: "先工作 等空了再说 · 回「要不等会吧 现在有点忙 等我把邮件发完」。", beat: "不知不觉 你干到了 6 点。\n便利店门口的小台阶上 · 陆屿捧着手机 · 叹了口气 · 转身上了楼。", effects: { 决: 1, 共: 0, 规: 1, 险: 0 }, next: "N03", flag: "went_down_late" },
+        { key: "C", text: "改约下班 —— 回「今天太忙了 有事我们下班或者明天说?」 · 继续翻 ezzzyKOL。", beat: "他回「**好**」。", effects: { 决: 1, 共: -3, 规: 1, 险: -1 }, next: "N03", flag: "rescheduled_dinner" },
+        { key: "D", text: "你总感觉今天 HR 有点不对劲 —— 和陆屿下楼后第一句问他:「你答辩的时候 Seraphine 有说什么吗?」", cost: "中途下楼这么久 · 你可能会被 HR 和老板盯上。", beat: "他愣了一下 · 笑着摇了摇头:\n「她好像一直在摆弄她的平板 · 没和我有什么交流。」\n\n屏幕亮起 · 写着「**爸**」。\n他看了一眼 · 按了拒接 · 没解释。\n\n他说「哦对了这个给你 · 走吧 我帮你一起找 Aurora 的名单」——\n递过来一个小纸袋 · 印着 Pop Mart 的折角。\n「回去再拆。」", effects: { 决: 2, 共: -1, 规: -1, 险: 3 }, next: "N03", item: "lu_review_seraphine_present", flag: "asked_about_seraphine", condition: s => s.items.has("hr_email_screenshot") }
       ]
     },
 
@@ -2424,6 +2424,7 @@ const NPC_PROFILES = {
   "Gordon":    { tag: "顾问(挂名)", role: "顾问",                        vibe: "帽衫兜帽党 · 来无影去无踪 · 没人说得清他干嘛的" },
   "Seraphine": { tag: "HR 总监",    role: "HR 总监",                      vibe: "邮件全用 ^_^ 签名 · 微笑保持精确 · 关心你「最近还好吗」那种关心法" },
   // 客户
+  "Aurora":    { tag: "客户 · Aurora", role: "AI 消费品初创",                 vibe: "老板字节阿里系出来的 · 刚 A 轮 · 钱多但要求毫无章法" },
   "Nolan":     { tag: "客户 · Aurora 市场", role: "Aurora 市场负责人",      vibe: "你跟他对接 · 他跟 Sam 对接 · 中间夹心 · 「Sam 凌晨没睡」这种话他对你说" },
   "Sam":       { tag: "客户 · Aurora 产品", role: "Aurora 产品老板",        vibe: "凌晨 3 点用 Cursor 改 brief · 让 Claude 写 talking points · 永远不进群 · 通过 Nolan 转" },
   // KOL
@@ -2524,7 +2525,7 @@ function lettersToKey(letters) {
 const $game = document.getElementById("game");
 
 // 人名自动识别表(auto-wrap 最后一步执行)
-const NPC_INTERNAL_RE = /(阿布|Jasper|Vivian|陆屿|米拉|Gordon|Seraphine|Nolan|Sam)/g;
+const NPC_INTERNAL_RE = /(阿布|Jasper|Vivian|陆屿|米拉|Gordon|Seraphine|Nolan|Sam|Aurora)/g;
 // KOL 完整名必须在短名之前(regex alternation 左优先)· Emma Nguyen > EmmaPet · 已移除 v2.1 旧名 Julia/Emma
 const NPC_KOL_RE = /(RourkeHolly|Emma Nguyen|EmmaPet|KaptainK|TechPeter|Konstantin|JesseFun|TechSarah|PetMolly|NoTechBro|AsiaVina|SportTim)/g;
 
